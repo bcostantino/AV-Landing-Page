@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<!-- Coding by CodingLab | www.codinglabweb.com-->
+<html lang="en" dir="ltr">
+  <head>
+    <%- include('./partials/head'); %>
+    <link href="/static/css/style.css" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/signup_style.css">
+    <style>
+      /* The message box is shown when the user clicks on the password field */
+      #message {
+        display:none;
+        background: #f1f1f1;
+        color: #000;
+        position: relative;
+        padding: 20px;
+        margin-top: 10px;
+        line-height: 15px;
+      }
+
+      #message p {
+        padding: 10px 35px;
+        font-size: 18px;
+      }
+
+      /* Add a green text color and a checkmark when the requirements are right */
+      .valid {
+        color: green;
+      }
+
+      /*.valid:before {
+        position: relative;
+        left: -35px;
+        content: "&#10004;";
+      }*/
+
+      /* Add a red text color and an "x" icon when the requirements are wrong */
+      .invalid {
+        color: red;
+      }
+
+      /*.invalid:before {
+        position: relative;
+        left: -35px;
+        content: "&#10006;";
+      }*/
+    </style>
+  </head>
+  <body>
+    <%- include('./partials/navbar', { active_page: "signup" }); %>
+
+    <div id="registration-container" class="wrapper">
+      <h2>Registration</h2>
+      <form id="sign-up-form" action="/signup">
+        <div class="input-box">
+          <input id="name" type="text" placeholder="Enter your name" required>
+        </div>
+        <div class="input-box">
+          <input id="email" type="text" placeholder="Enter your email" required>
+        </div>
+        <div class="input-box">
+          <input id="password" type="password" placeholder="Create password" required>
+        </div>
+        <div id="message">
+          <h3>Password must contain the following:</h3>
+          <span id="letter" class="invalid">A <b>lowercase</b> letter</span>
+          <span id="capital" class="invalid">A <b>capital (uppercase)</b> letter</span>
+          <span id="number" class="invalid">A <b>number</b></span>
+          <span id="length" class="invalid">Minimum <b>8 characters</b></span>
+        </div>
+        <div class="input-box">
+          <input id="password-confirm" type="password" placeholder="Confirm password" required>
+        </div>
+        <div class="policy">
+          <input type="checkbox">
+          <h3>I accept all <a href="">terms & conditions</a></h3>
+        </div>
+        <div class="input-box button">
+          <input class="btn btn-light rounded" type="Submit" value="Register Now">
+        </div>
+        <div class="text">
+          <h3>Already have an account? <a href="#">Login now</a></h3>
+        </div>
+      </form>
+    </div>
+  </body>
+
+  <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+  <script>
+    // this is the id of the form
+    $("#sign-up-form").submit(function(e) {
+      e.preventDefault(); // avoid to execute the actual submit of the form.
+      const form = $(this);
+      const url = form.attr('action');
+      const data = {
+        name: $('input#name').val(),
+        email: $('input#email').val(),
+        password: $('input#password').val(),
+        passwordConfirm: $('input#password-confirm').val()
+      };
+      $.ajax({
+        type: "POST",
+        url: url,
+        data: data, //form.serialize(), // serializes the form's elements.
+        success: function(data) {
+          //alert(data); // show response
+          window.location.href = "/profile";
+        }
+      }); 
+    });
+  </script>
+  <script>
+    var myInput = document.getElementById("password");
+    var letter = document.getElementById("letter");
+    var capital = document.getElementById("capital");
+    var number = document.getElementById("number");
+    var length = document.getElementById("length");
+    
+    // When the user clicks on the password field, show the message box
+    myInput.onfocus = function() {
+      document.getElementById("message").style.display = "inline-block";
+    }
+    
+    // When the user clicks outside of the password field, hide the message box
+    myInput.onblur = function() {
+      document.getElementById("message").style.display = "none";
+    }
+    
+    // When the user starts to type something inside the password field
+    myInput.onkeyup = function() {
+      // Validate lowercase letters
+      var lowerCaseLetters = /[a-z]/g;
+      if(myInput.value.match(lowerCaseLetters)) {
+        letter.classList.remove("invalid");
+        letter.classList.add("valid");
+      } else {
+        letter.classList.remove("valid");
+        letter.classList.add("invalid");
+    }
+    
+      // Validate capital letters
+      var upperCaseLetters = /[A-Z]/g;
+      if(myInput.value.match(upperCaseLetters)) {
+        capital.classList.remove("invalid");
+        capital.classList.add("valid");
+      } else {
+        capital.classList.remove("valid");
+        capital.classList.add("invalid");
+      }
+    
+      // Validate numbers
+      var numbers = /[0-9]/g;
+      if(myInput.value.match(numbers)) {
+        number.classList.remove("invalid");
+        number.classList.add("valid");
+      } else {
+        number.classList.remove("valid");
+        number.classList.add("invalid");
+      }
+    
+      // Validate length
+      if(myInput.value.length >= 8) {
+        length.classList.remove("invalid");
+        length.classList.add("valid");
+      } else {
+        length.classList.remove("valid");
+        length.classList.add("invalid");
+      }
+    }
+    </script>
+</html>
