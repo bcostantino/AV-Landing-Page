@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <%- include('./partials/head'); %>
+
+    <!-- Template Stylesheet -->
+    <link href="/static/css/style.css" rel="stylesheet">
+    <style>
+        div.price-item > div.header {
+            text-align: center;
+        }
+
+        div.price-item > div.header > div.header-desc {
+            max-width: 14rem;
+            margin: auto;
+        }
+
+        div.price-item > div.header div.pricing-data * {
+            font-family: monospace;
+        }
+
+        div.price-card-notify-header {
+            height: 24px;
+            text-align: center;
+        }
+
+        div.price-item-total.active {
+            background-color: var(--primary);
+        }
+
+        /* The switch - the box around the slider */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        /* Hide default HTML checkbox */
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        /* The slider */
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            -webkit-transition: .4s;
+            transition: .4s;
+        }
+
+        .slider:before {
+        position: absolute;
+        content: "";
+        height: 26px;
+        width: 26px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        -webkit-transition: .4s;
+        transition: .4s;
+        }
+
+        input:checked + .slider {
+        background-color: var(--primary);
+        }
+
+        input:focus + .slider {
+        box-shadow: 0 0 1px var(--primary);
+        }
+
+        input:checked + .slider:before {
+        -webkit-transform: translateX(26px);
+        -ms-transform: translateX(26px);
+        transform: translateX(26px);
+        }
+
+        /* Rounded sliders */
+        .slider.round {
+        border-radius: 34px;
+        }
+
+        .slider.round:before {
+        border-radius: 50%;
+        }
+
+        .toggle-group > .toggle-handle.btn.btn-default {
+            background-color: rgb(232, 232, 232);
+            
+        }
+
+        /*div.toggle.btn {
+
+        }
+
+        div#home.container-xxl {
+            background-image: linear-gradient(var(--dark), white);
+        }*/
+
+    </style>
+</head>
+
+<body>
+    <div data-target="#navbar" data-offset="0" class="container-xxl bg-white p-0">
+        <!-- Spinner Start -->
+        <div id="spinner" class="show bg-white position-fixed translate-middle w-100 vh-100 top-50 start-50 d-flex align-items-center justify-content-center">
+            <div class="spinner-grow text-primary" style="width: 3rem; height: 3rem;" role="status">
+                <span class="sr-only">Loading...</span>
+            </div>
+        </div>
+        <!-- Spinner End -->
+        
+        <!-- Navbar & Hero Start -->
+        <div class="container-xxl position-relative p-0 pb-5" id="home">
+            <%- include('./partials/navbar', { active_page: "home" }); %>
+
+            <div class="container-xxl hero-header">
+                <div class="container">
+                    <div class="row g-5 align-items-center" style="margin: 0 5rem 0 5rem;">
+                        <div class="col-lg-6 text-center text-lg-start">
+                            <h1 class="text-dark mb-4 animated slideInDown">AUTOVIZ v1.0 is under development!</h1>
+                            <p class="text-dark pb-3 animated slideInDown">
+                                AutoViz is a system management and automation platform comprising methods 
+                                for directing control-flow and data transmission for various IoT devices. We 
+                                provide developers with simpler yet more efficient ways to connect 
+                                their devices to distributed monitoring centers.
+                            </p>
+                            <div class="position-relative w-100 mt-3">
+                                <!--<form action="forms/join_waiting_list.php" method="POST">-->
+                                <input id="join-waiting-list-email" name="email" class="form-control border-2 rounded-pill w-100 ps-4 pe-5" type="text" placeholder="Your Email" style="height: 58px;">
+                                <button onclick="addToWaitingList()" class="btn btn-primary rounded-pill py-2 px-3 shadow-none position-absolute top-0 end-0 m-2">Join the Waiting List</button>
+                            </div>
+                        </div>
+                        <div class="col-lg-6 text-center text-lg-start">
+                            <img class="preview-img img-fluid rounded animated zoomIn" src="/static/img/v1_workspace_page.png" alt="">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Navbar & Hero End -->
+
+
+        <!-- Feature Start -->
+        <div class="container-xxl py-4 mt-5">
+            <div class="container">
+                <div class="row g-4">
+                    <div class="col-lg-4 wow fadeInUp" data-wow-delay="0.1s">
+                        <div class="feature-item bg-light rounded text-center p-5">
+                            <i class="fa fa-4x fa-project-diagram text-primary mb-4"></i>
+                            <h5 class="mb-3">Control-Flow Management</h5>
+                            <p class="m-0">
+                                Manage control-flow by assigning time-sensitive directives to specific nodes within the system.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 wow fadeInUp" data-wow-delay="0.3s">
+                        <div class="feature-item bg-light rounded text-center p-5">
+                            <i class="fa fa-4x fa-database text-primary mb-4"></i>
+                            <h5 class="mb-3">Data Handling / Storage</h5>
+                            <p class="m-0">
+                                AutoViz accepts data transmission from a variety of IoT devices, and can store, and forward this data to subscribers, 
+                                monitoring centers, healthcare providers, etc.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 wow fadeInUp" data-wow-delay="0.5s">
+                        <div class="feature-item bg-light rounded text-center p-5">
+                            <i class="fa fa-4x fa-chart-line text-primary mb-4"></i>
+                            <h5 class="mb-3">Dashboard Portal</h5>
+                            <p class="m-0">
+                                Our responsive dashboard UI is a web-based wrapper for the controller API, allowing users to easily manage their systems through a portal.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Feature End -->
+
+
+        <!-- About Start -->
+        <div class="container-xxl py-6" id="about">
+            <div class="container">
+                <div class="row g-5 flex-column-reverse flex-lg-row" style="margin: 0 3rem 0 3rem;">
+                    <div class="col-lg-6 wow fadeInUp" data-wow-delay="0.1s">
+                        <h1 class="mb-4">The IoT System Management Platform</h1>
+                        <h4 class="mb-4" style="font-weight: 300 !important;">
+                            Deliver better systems faster with one platform for all of your data, control, and security pipelines.
+                        </h4>
+                        <!--<p class="mb-4">
+                            
+                        </p>-->
+                        <div class="d-flex mb-4">
+                            <div class="flex-shrink-0 btn-square rounded-circle bg-primary text-white">
+                                <i class="fa fa-check"></i>
+                            </div>
+                            <div class="ms-4">
+                                <h5>Built for Communication</h5>
+                                <p class="mb-0">
+                                    We allow users to achieve more effective and reliable results
+                                    by stripping away barriers like exclusivity and dependency from system infrastructure.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="d-flex mb-4">
+                            <div class="flex-shrink-0 btn-square rounded-circle bg-primary text-white">
+                                <i class="fa fa-check"></i>
+                            </div>
+                            <div class="ms-4">
+                                <h5>Documentation & Community</h5>
+                                <p class="mb-0">
+                                    Implimentation is made easy with our growing library of API guides that range from
+                                    beginner to advanced topics.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="d-flex mb-4">
+                            <div class="flex-shrink-0 btn-square rounded-circle bg-primary text-white">
+                                <i class="fa fa-check"></i>
+                            </div>
+                            <div class="ms-4">
+                                <h5>Customer Support</h5>
+                                <p class="mb-0">
+                                    If you're in need of support, please reach out via our contact form below. We provide
+                                    thoughtful and timely responses for our customers.
+                                </p>
+                            </div>
+                        </div>
+                        <a href="" class="btn btn-primary py-sm-3 px-sm-5 rounded-pill mt-3">Read More</a>
+                    </div>
+                    <div class="col-lg-6">
+                        <img class="img-fluid rounded wow zoomIn" data-wow-delay="0.5s" src="img/about.jpg">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- About End -->
+
+
+        <!-- Overview Start -->
+        <div class="container-xxl bg-light my-4 py-4" id="overview">
+            <div class="container">
+                <div class="row g-5 py-5 align-items-center">
+                    <div class="col-lg-6 wow fadeInUp" data-wow-delay="0.1s">
+                        <img class="img-fluid rounded" src="/static/img/computer-technology-gadget-electronics-linux-microcontroller-626037-pxhere.com.jpg" style="margin: auto;display: block;">
+                    </div>
+                    <div class="col-lg-6 wow fadeInUp" data-wow-delay="0.5s">
+                        <div class="d-flex align-items-center mb-4">
+                            <h1 class="mb-0">01</h1>
+                            <span class="bg-primary mx-2" style="width: 30px; height: 2px;"></span>
+                            <h5 class="mb-0">Node Initialization</h5>
+                        </div>
+                        <p class="mb-4">
+                            Nodes are initialized through a simple handshake with our platform, which 
+                            communicates critical node-specific information to the controller and returns an access limited 
+                            token used to authenticate nodes for further requests. See our <a href="">API documentation</a> for more info. 
+                        </p>
+                        <p><i class="fa fa-check-circle text-primary me-3"></i>Simple HTTP client implimentation</p>
+                        <p><i class="fa fa-check-circle text-primary me-3"></i>TCP, UDP, MQTT and WS implimentations coming soon</p>
+                        <p class="mb-0"><i class="fa fa-check-circle text-primary me-3"></i>Secure authentication / authorization</p>
+                        <!--<p ><i class="fa fa-check-circle text-primary me-3"></i>User friendly interface</p>-->
+                    </div>
+                </div>
+                <div class="row g-5 py-5 align-items-center flex-column-reverse flex-lg-row">
+                    <div class="col-lg-6 wow fadeInUp" data-wow-delay="0.5s">
+                        <div class="d-flex align-items-center mb-4">
+                            <h1 class="mb-0">02</h1>
+                            <span class="bg-primary mx-2" style="width: 30px; height: 2px;"></span>
+                            <h5 class="mb-0">Task Based Automation</h5>
+                        </div>
+                        <p class="mb-4">
+                            Create a task with pre-defined or custom directives and assign it to a node 
+                            to be completed on a one-time or repeating basis.
+                        </p>
+                        <p><i class="fa fa-check-circle text-primary me-3"></i>Asyncronous task distribution</p>
+                        <p><i class="fa fa-check-circle text-primary me-3"></i>Real-time event processing</p>
+                        <p class="mb-0"><i class="fa fa-check-circle text-primary me-3"></i>More effective & poerwfull</p>
+                    </div>
+                    <div class="col-lg-6 wow fadeInUp" data-wow-delay="0.1s">
+                        <img class="img-fluid rounded" src="/static/img/301100333cropped.jpg" style="margin: auto;display: block;">
+                    </div>
+                </div>
+                <div class="row g-5 py-5 align-items-center">
+                    <div class="col-lg-6 wow fadeInUp" data-wow-delay="0.1s">
+                        <img class="img-fluid rounded" src="/static/img/laptop-notebook-computer-writing-work-hand-883504-pxhere.com.jpg" style="margin: auto;display: block;">
+                    </div>
+                    <div class="col-lg-6 wow fadeInUp" data-wow-delay="0.5s">
+                        <div class="d-flex align-items-center mb-4">
+                            <h1 class="mb-0">03</h1>
+                            <span class="bg-primary mx-2" style="width: 30px; height: 2px;"></span>
+                            <h5 class="mb-0">System Integration</h5>
+                        </div>
+                        <p class="mb-4">
+                            Diam dolor diam ipsum et tempor sit. Aliqu diam amet diam et eos labore. Clita erat ipsum et lorem et sit, sed stet no labore lorem sit clita duo justo eirmod magna dolore erat amet
+                        </p>
+                        <p><i class="fa fa-check-circle text-primary me-3"></i>Fully customizable</p>
+                        <p><i class="fa fa-check-circle text-primary me-3"></i>User friendly interface</p>
+                        <p class="mb-0"><i class="fa fa-check-circle text-primary me-3"></i>More effective & poerwfull</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Overview End -->
+
+
+        <!-- Advanced Feature Start -->
+        <div class="container-xxl py-6" id="features">
+            <div class="container">
+                <div class="mx-auto text-center wow fadeInUp" data-wow-delay="0.1s" style="max-width: 600px;">
+                    <h1 class="mb-3">Advanced Features</h1>
+                    <p class="mb-5">Diam dolor diam ipsum et tempor sit. Aliqu diam amet diam et eos labore. Clita erat ipsum et lorem et sit, sed stet no labore lorem sit clita duo justo</p>
+                </div>
+                <div class="row g-4 p-4">
+                    <div class="col-lg-3 col-md-6 wow fadeInUp" data-wow-delay="0.1s">
+                        <div class="advanced-feature-item text-center rounded py-5 px-4">
+                            <i class="fa fa-3x fa-project-diagram text-primary mb-4"></i>
+                            <h5 class="mb-3">Control-Flow Management</h5>
+                            <p class="m-0">
+                                Manage control-flow by assigning time-sensitive directives to specific nodes within the system.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6 wow fadeInUp" data-wow-delay="0.3s">
+                        <div class="advanced-feature-item text-center rounded py-5 px-4">
+                            <i class="fa fa-3x fa-database text-primary mb-4"></i>
+                            <h5 class="mb-3">Data Handling / Storage</h5>
+                            <p class="m-0">
+                                AutoViz can store and route data transmissions from a variety of IoT devices.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6 wow fadeInUp" data-wow-delay="0.5s">
+                        <div class="advanced-feature-item text-center rounded py-5 px-4">
+                            <i class="fa fa-3x fa-shield-alt text-primary mb-4"></i>
+                            <h5 class="mb-3">Security</h5>
+                            <p class="m-0">
+                                Erat ipsum justo amet duo et elitr dolor, est duo duo eos lorem sed diam stet.
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6 wow fadeInUp" data-wow-delay="0.7s">
+                        <div class="advanced-feature-item text-center rounded py-5 px-4">
+                            <i class="fa fa-3x fa-code text-primary mb-4"></i>
+                            <h5 class="mb-3">Drag And Drop</h5>
+                            <p class="m-0">Erat ipsum justo amet duo et elitr dolor, est duo duo eos lorem sed diam stet.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Advanced Feature End -->
+
+        <!-- Process Start -->
+        <div class="container-xxl py-6">
+            <div class="container">
+                <div class="row g-5">
+                    <div class="col-lg-6 wow fadeInUp" data-wow-delay="0.1s">
+                        <img class="img-fluid rounded" src="/img/v1_workspace_page.png">
+                    </div>
+                    <div class="col-lg-6 wow fadeInUp" data-wow-delay="0.5s">
+                        <h1 class="mb-4">Three Simple Steps To Start Working With</h1>
+                        <p class="mb-4">Diam dolor diam ipsum et tempor sit. Aliqu diam amet diam et eos labore. Clita erat ipsum et lorem et sit, sed stet no labore lorem sit clita duo justo eirmod magna dolore erat amet</p>
+                        <ul class="process mb-0">
+                            <li>
+                                <span><i class="fa fa-user-astronaut"></i></span>
+                                <div>
+                                    <h5>Register An Account</h5>
+                                    <p>
+                                        Tempor erat elitr rebum at clita. Diam dolor diam ipsum sit. Aliqu diam amet diam et eos erat ipsum et lorem et sit
+                                    </p>
+                                </div>
+                            </li>
+                            <li>
+                                <span><i class="fa fa-paperclip"></i></span>
+                                <div>
+                                    <h5>Create a Workspace</h5>
+                                    <p>Diam dolor diam ipsum sit. Aliqu diam amet diam et eos. Clita erat ipsum et lorem et sit, sed stet lorem sit clita duo</p>
+                                </div>
+                            </li>
+                            <li>
+                                <span><i class="fa fa-rocket"></i></span>
+                                <div>
+                                    <h5>Enjoy The Features!</h5>
+                                    <p>Aliqu diam amet diam et eos. Clita erat ipsum et lorem et sit, sed stet lorem sit clita duo justo magna</p>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Process End -->
+
+        <!-- Facts Start -->
+        <!--<div class="container-xxl bg-primary my-6 py-6 wow fadeInUp" data-wow-delay="0.1s">
+            <div class="container">
+                <div class="row g-4">
+                    <div class="col-md-6 col-lg-3 text-center wow fadeIn" data-wow-delay="0.1s">
+                        <i class="fa fa-cogs fa-3x text-white mb-3"></i>
+                        <h1 class="mb-2" data-toggle="counter-up">7264</h1>
+                        <p class="text-white mb-0">Active Install</p>
+                    </div>
+                    <div class="col-md-6 col-lg-3 text-center wow fadeIn" data-wow-delay="0.3s">
+                        <i class="fa fa-users fa-3x text-white mb-3"></i>
+                        <h1 class="mb-2" data-toggle="counter-up">6521</h1>
+                        <p class="text-white mb-0">Satisfied Clients</p>
+                    </div>
+                    <div class="col-md-6 col-lg-3 text-center wow fadeIn" data-wow-delay="0.5s">
+                        <i class="fa fa-certificate fa-3x text-white mb-3"></i>
+                        <h1 class="mb-2" data-toggle="counter-up">729</h1>
+                        <p class="text-white mb-0">Award Wins</p>
+                    </div>
+                    <div class="col-md-6 col-lg-3 text-center wow fadeIn" data-wow-delay="0.7s">
+                        <i class="fa fa-quote-left fa-3x text-white mb-3"></i>
+                        <h1 class="mb-2" data-toggle="counter-up">5917</h1>
+                        <p class="text-white mb-0">Clients Reviews</p>
+                    </div>
+                </div>
+            </div>
+        </div>-->
+        <!-- Facts End -->
+
+        <!-- Testimonial Start -->
+        <!--<div class="container-xxl py-6" id="testimonial">
+            <div class="container">
+                <div class="mx-auto text-center wow fadeInUp" data-wow-delay="0.1s" style="max-width: 600px;">
+                    <h1 class="mb-3">What Our Clients Say</h1>
+                    <p class="mb-5">Diam dolor diam ipsum et tempor sit. Aliqu diam amet diam et eos labore. Clita erat ipsum et lorem et sit, sed stet no labore lorem sit clita duo justo</p>
+                </div>
+                <div class="owl-carousel testimonial-carousel wow fadeInUp" data-wow-delay="0.1s">
+                    <div class="testimonial-item bg-light rounded my-4">
+                        <p class="fs-5"><i class="fa fa-quote-left fa-4x text-primary mt-n4 me-3"></i>Diam dolor diam ipsum sit. Aliqu diam amet diam et eos. Clita erat ipsum et lorem et sit sed stet lorem sit clita duo justo.</p>
+                        <div class="d-flex align-items-center">
+                            <img class="img-fluid flex-shrink-0 rounded-circle" src="img/testimonial-1.jpg" style="width: 65px; height: 65px;">
+                            <div class="ps-4">
+                                <h5 class="mb-1">Client Name</h5>
+                                <span>Profession</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="testimonial-item bg-light rounded my-4">
+                        <p class="fs-5"><i class="fa fa-quote-left fa-4x text-primary mt-n4 me-3"></i>Diam dolor diam ipsum sit. Aliqu diam amet diam et eos. Clita erat ipsum et lorem et sit sed stet lorem sit clita duo justo.</p>
+                        <div class="d-flex align-items-center">
+                            <img class="img-fluid flex-shrink-0 rounded-circle" src="img/testimonial-2.jpg" style="width: 65px; height: 65px;">
+                            <div class="ps-4">
+                                <h5 class="mb-1">Client Name</h5>
+                                <span>Profession</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="testimonial-item bg-light rounded my-4">
+                        <p class="fs-5"><i class="fa fa-quote-left fa-4x text-primary mt-n4 me-3"></i>Diam dolor diam ipsum sit. Aliqu diam amet diam et eos. Clita erat ipsum et lorem et sit sed stet lorem sit clita duo justo.</p>
+                        <div class="d-flex align-items-center">
+                            <img class="img-fluid flex-shrink-0 rounded-circle" src="img/testimonial-3.jpg" style="width: 65px; height: 65px;">
+                            <div class="ps-4">
+                                <h5 class="mb-1">Client Name</h5>
+                                <span>Profession</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>-->
+        <!-- Testimonial End -->
+
+        <!-- Pricing Start -->
+        <div class="container-xxl py-6" id="pricing">
+            <div class="container">
+                <div class="mx-auto mb-5 text-center wow fadeInUp" data-wow-delay="0.1s" style="max-width: 600px;">
+                    <h1 class="mb-3">Pricing Plan</h1>
+                    <p class="mb-3">
+                        Our simple, straightforward plans offer stability and predictability at the end of the month. No more surprise bills.
+                    </p>
+                
+
+                    <h5 class="my-3">How often do you want to pay?</h5>
+                    <!-- bootstrap toggle - see https://www.bootstraptoggle.com/ -->
+                    <input id="pricing-period-toggle" 
+                            type="checkbox" 
+                            data-toggle="toggle" 
+                            data-on="Monthly" data-off="Annually"
+                            data-onstyle="primary" data-offstyle="light"
+                            data-width="150">
+                </div>
+
+                <div class="row g-4">
+                    <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="0.1s">
+                        <div class="price-item-total px-2 pb-1 pt-3">
+                            <div class="price-card-notify-header">
+                            </div>
+                            <div class="price-item rounded overflow-hidden">
+                                <div class="header bg-white p-4">
+                                    <h4 class="text-black mt-2 mb-0">Free</h4>
+                                    <div class="header-desc mb-2 small">
+                                        The basics for learning and prototyping
+                                    </div>
+                                    <div class="pricing-data">
+                                        <span class="align-top fs-4 fw-bold">$</span>
+                                        <h1 id="tier-1-price" class="d-inline display-6 text-black mb-0">0</h1>
+                                        <span id="tier-1-price-unit" class="align-baseline small">per month forever</span>
+                                    </div>
+                                    <a href="" class="btn btn-dark rounded py-2 px-4 my-3" style="width: 100%;">
+                                        Create a free workspace
+                                    </a>
+                                </div>
+                                <div class="bg-light text-dark p-4 small">
+                                    <details class="my-2">
+                                        <summary><b>1,000 task minutes/month</b></summary>
+                                        <div class="my-2 ms-3">
+                                            Use execution minutes with AutoViz Directives to automate your 
+                                            system control pipelines. Write tasks and combine them to read, 
+                                            write, and signal nodes in your network.
+                                        </div>
+                                    </details>
+                                    <details class="my-2">
+                                        <summary><b>200 MB live data storage</b></summary>
+                                        <div class="my-2 ms-3">
+                                            Host your own live database. Both private and public hosting available. 
+                                        </div>
+                                    </details>
+                                    <details class="my-2">
+                                        <summary><b>Notifications & Alerts</b></summary>
+                                        <div class="my-2 ms-3">
+                                            Recieve custom notifications and alerts for critical events within your system.
+                                        </div>
+                                    </details>
+                                    <details class="my-2">
+                                        <summary><b>Community support</b></summary>
+                                        <div class="my-2 ms-3">
+                                            Get help with most of your AutoViz questions and issues in our 
+                                            Community Forum.
+                                        </div>
+                                    </details>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="0.3s">
+                        <div class="price-item-total active rounded px-2 pb-2 pt-2">
+                            <div class="price-card-notify-header mb-1">
+                                <h6 style="color: white;">MOST POPULAR</h6>
+                            </div>
+                            <div class="price-item rounded overflow-hidden">
+                                <div class="header bg-white p-4">
+                                    <h4 class="text-black mt-2 mb-0">Standard</h4>
+                                    <div class="header-desc mb-2 small">
+                                        Advanced collaboration for individuals and organizations
+                                    </div>
+                                    <div class="pricing-data">
+                                        <!--<span class="fs-4 fw-bold" style="text-decoration: line-through;">$280</span>-->
+                                        <span class="align-top fs-4 fw-bold">$</span>
+                                        <h1 id="tier-2-price" class="d-inline display-6 text-dark mb-0"> 24</h1>
+                                        <span id="tier-2-price-unit" class="align-baseline">per user/month</span>
+                                    </div>
+                                    <a href="" class="btn btn-light rounded py-2 px-4 my-3" style="width: 100%;">Get Started</a>
+                                </div>
+                                <div class="bg-light text-dark p-4 small">
+                                    <div class="mb-3">
+                                        <i class="fa fa-arrow-left"></i>
+                                        Everything included in Free, plus...
+                                    </div>
+                                    <details class="my-2">
+                                        <summary><b>Unlimited workspaces</b></summary>
+                                        <div class="my-2 ms-3">
+                                            Use execution minutes with AutoViz Directives to automate your 
+                                            system control pipelines. Write tasks and combine them to read, 
+                                            write, and signal nodes in your network.
+                                        </div>
+                                    </details>
+                                    <details class="my-2">
+                                        <summary><b>2,000 task minutes/month</b></summary>
+                                        <div class="my-2 ms-3">
+                                            Use execution minutes with AutoViz Directives to automate your 
+                                            system control pipelines. Write tasks and combine them to read, 
+                                            write, and signal nodes in your network.
+                                        </div>
+                                    </details>
+                                    <details class="my-2">
+                                        <summary><b>10 GB live data storage</b></summary>
+                                        <div class="my-2 ms-3">
+                                            Host your own live database. Both private and public hosting available. 
+                                        </div>
+                                    </details>
+                                    <details class="my-2">
+                                        <summary><b>Device logs</b></summary>
+                                        <div class="my-2 ms-3">
+                                            Recieve custom notifications and alerts for critical events within your system.
+                                        </div>
+                                    </details>
+                                    <details class="my-2">
+                                        <summary><b>Web-based support</b></summary>
+                                        <div class="my-2 ms-3">
+                                            AutoViz Support can help you troubleshoot issues 
+                                            you run into while using our platform.
+                                        </div>
+                                    </details>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="0.3s">
+                        <div class="price-item-total rounded px-2 pb-2 pt-2">
+                            <div class="price-card-notify-header mb-1">
+                            </div>
+                            <div class="price-item rounded overflow-hidden">
+                                <div class="header bg-white p-4">
+                                    <h4 class="text-black mt-2 mb-0">Enterprise</h4>
+                                    <div class="header-desc mb-2 small">
+                                        Security, compliance, and flexibility for large organizations
+                                    </div>
+                                    <div class="pricing-data">
+                                        <span class="align-baseline">From</span>
+                                        <span class="align-top fs-4 fw-bold">$</span>
+                                        <h1 class="d-inline display-6 text-dark mb-0">96</h1>
+                                        <span class="align-baseline">per user/month</span>
+                                    </div>
+                                    <a href="" class="btn btn-dark rounded py-2 px-4 my-3" style="float: left; width: auto;">
+                                        Start a Free trial
+                                    </a>
+                                    <a href="" class="btn btn-light rounded py-2 px-4 my-3" style="width: 50%;">
+                                        Get Started
+                                    </a>
+                                </div>
+                                <div class="bg-light text-dark p-4 small">
+                                    <div class="mb-3">
+                                        <i class="fa fa-arrow-left"></i>
+                                        Everything included in Standard, plus...
+                                    </div>
+                                    <details class="my-2">
+                                        <summary><b>Unlimited workspaces</b></summary>
+                                        <div class="my-2 ms-3">
+                                            Use execution minutes with AutoViz Directives to automate your 
+                                            system control pipelines. Write tasks and combine them to read, 
+                                            write, and signal nodes in your network.
+                                        </div>
+                                    </details>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!--<div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="0.5s">
+                        <div class="price-item rounded overflow-hidden">
+                            <div class="header bg-dark p-4">
+                                <h4 class="text-white mt-2">Professional</h4>
+                                <div class="text-white">
+                                    <span class="align-top fs-4 fw-bold">$</span>
+                                    <h1 class="d-inline display-6 text-primary mb-0"> 99.99</h1>
+                                    <span class="align-baseline">per user/month</span>
+                                    <a href="" class="btn btn-light rounded py-2 px-4 my-3" style="width: 100%;">Get Started</a>
+                                </div>
+                            </div>
+                            <div class="p-4">
+                                <div class="d-flex justify-content-between mb-3"><span>HTML5 & CSS3</span><i class="fa fa-check text-success pt-1"></i></div>
+                                <div class="d-flex justify-content-between mb-3"><span>Bootstrap v5</span><i class="fa fa-check text-success pt-1"></i></div>
+                                <div class="d-flex justify-content-between mb-3"><span>Responsive Layout</span><i class="fa fa-check text-success pt-1"></i></div>
+                                <div class="d-flex justify-content-between mb-3"><span>Cross-browser Support</span><i class="fa fa-check text-success pt-1"></i></div>
+                                <div class="d-flex justify-content-between mb-3"><span>Remove Author's Credit</span><i class="fa fa-check text-success pt-1"></i></div>
+                                <div class="d-flex justify-content-between mb-3"><span>PHP & Ajax Contact Form</span><i class="fa fa-check text-success pt-1"></i></div>
+                                <div class="d-flex justify-content-between mb-3"><span>6 Months Free Support</span><i class="fa fa-check text-success pt-1"></i></div>
+
+                            </div>
+                        </div>
+                    </div>-->
+                </div>
+            </div>
+        </div>
+        <!-- Pricing End -->
+
+
+
+
+
+        <!-- Contact Start -->
+        <div class="container-xxl py-6" id="contact">
+            <div class="container">
+                <div class="row g-5">
+                    <div class="col-lg-6 wow fadeInUp" data-wow-delay="0.1s">
+                        <h1 class="mb-4">Get In Touch</h1>
+                        <!--<p class="mb-4">
+                            The contact form is currently inactive. Get a functional and working contact form with Ajax & PHP in a few minutes. 
+                            Just copy and paste the files, add a little code and you're done. 
+                            <a href="https://htmlcodex.com/contact-form">Download Now</a>.
+                        </p>-->
+                        <div class="d-flex mb-4">
+                            <div class="flex-shrink-0 btn-square rounded-circle bg-primary text-white">
+                                <i class="fa fa-phone-alt"></i>
+                            </div>
+                            <div class="ms-3">
+                                <p class="mb-2">Call Us</p>
+                                <h5 class="mb-0">+012 345 6789</h5>
+                            </div>
+                        </div>
+                        <div class="d-flex mb-4">
+                            <div class="flex-shrink-0 btn-square rounded-circle bg-primary text-white">
+                                <i class="fa fa-envelope"></i>
+                            </div>
+                            <div class="ms-3">
+                                <p class="mb-2">Mail Us</p>
+                                <h5 class="mb-0">info@example.com</h5>
+                            </div>
+                        </div>
+                        <div class="d-flex mb-0">
+                            <div class="flex-shrink-0 btn-square rounded-circle bg-primary text-white">
+                                <i class="fa fa-map-marker-alt"></i>
+                            </div>
+                            <div class="ms-3">
+                                <p class="mb-2">Our Office</p>
+                                <h5 class="mb-0">123 Street, New York, USA</h5>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6 wow fadeInUp" data-wow-delay="0.5s">
+                        <form id="contact-form" action="forms/contact.php" method="POST">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <input type="text" name="name" class="form-control" id="name" placeholder="Your Name">
+                                        <label for="name">Your Name</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-floating">
+                                        <input type="email" name="email" class="form-control" id="email" placeholder="Your Email">
+                                        <label for="email">Your Email</label>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="form-floating">
+                                        <input type="text" name="subject" class="form-control" id="subject" placeholder="Subject">
+                                        <label for="subject">Subject</label>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="form-floating">
+                                        <textarea form="contact-form" name="message" class="form-control" placeholder="Leave a message here" id="message" style="height: 150px"></textarea>
+                                        <label for="message">Message</label>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <button class="btn btn-primary rounded-pill py-3 px-5" type="submit">Send Message</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Contact End -->
+        
+
+        <!-- Footer Start -->
+        <div class="container-fluid bg-dark text-body footer wow fadeIn" data-wow-delay="0.1s">
+            <div class="container py-5 px-lg-5">
+                <div class="row g-5">
+                    <div class="col-md-6 col-lg-4">
+                        <p class="section-title text-white h5 mb-4">Address<span></span></p>
+                        <!--<p><i class="fa fa-map-marker-alt me-3"></i>123 Street, New York, USA</p>-->
+                        <p><i class="fa fa-phone-alt me-3"></i>+1 (856) 516-5762</p>
+                        <p><i class="fa fa-envelope me-3"></i>info@autoviz.net</p>
+                        <div class="d-flex pt-2">
+                            <!--<a class="btn btn-outline-light btn-social" href=""><i class="fab fa-twitter"></i></a>-->
+                            <a class="btn btn-outline-light btn-social" href="https://www.facebook.com/AutoViz-IoT-System-Management-103229026052293" target="_blank"><i class="fab fa-facebook-f"></i></a>
+                            <a class="btn btn-outline-light btn-social" href="https://www.instagram.com/autoviziot/" target="_blank"><i class="fab fa-instagram"></i></a>
+                            <a class="btn btn-outline-light btn-social" href=""><i class="fab fa-linkedin-in"></i></a>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-4">
+                        <p class="section-title text-white h5 mb-4">Quick Link<span></span></p>
+                        <a class="btn btn-link" href="#about">About</a>
+                        <a class="btn btn-link" href="#contact">Contact</a>
+                        <!--<a class="btn btn-link" href="">Privacy Policy</a>
+                        <a class="btn btn-link" href="">Terms & Conditions</a>
+                        <a class="btn btn-link" href="">Support</a>-->
+                    </div>
+                    <!--<div class="col-md-6 col-lg-3">
+                        <p class="section-title text-white h5 mb-4">Community<span></span></p>
+                        <a class="btn btn-link" href="">Career</a>
+                        <a class="btn btn-link" href="">Leadership</a>
+                        <a class="btn btn-link" href="">Strategy</a>
+                        <a class="btn btn-link" href="">History</a>
+                        <a class="btn btn-link" href="">Components</a>
+                    </div>-->
+                    <div class="col-md-6 col-lg-4">
+                        <p class="section-title text-white h5 mb-4">Newsletter<span></span></p>
+                        <p>
+                            Join our monthly newsletter to keep tabs on AutoViz updates and other 
+                            cutting edge innovations in technology.
+                        </p>
+                        <div class="position-relative w-100 mt-3">
+                            <!--<form action="forms/join_newsletter.php" method="POST">-->
+                            <input id="join-newsletter-email" name="email" class="form-control border-0 rounded-pill w-100 ps-4 pe-5" type="text" placeholder="Your Email" style="height: 48px;">
+                            <button onclick="addToNewsletter()" class="btn shadow-none position-absolute top-0 end-0 mt-1 me-2"><i class="fa fa-paper-plane text-primary fs-4"></i></button>    
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="container px-lg-5">
+                <div class="copyright">
+                    <div class="row">
+                        <div class="col-md-6 text-center text-md-start mb-3 mb-md-0" style="line-height: 10px;">
+                            <p>
+                                Copyright &copy; 2023 <a class="border-bottom" href="#">AutoViz</a> / CosTech, All Right Reserved. 
+							</p>
+
+							<!--/*** This template is free as long as you keep the footer author’s credit link/attribution link/backlink. If you'd like to use the template without the footer author’s credit link/attribution link/backlink, you can purchase the Credit Removal License from "https://htmlcodex.com/credit-removal". Thank you for your support. ***/-->
+                            <p>
+                                Designed By <a class="border-bottom" href="https://htmlcodex.com">HTML Codex</a>
+                            </p>
+                        </div>
+                        <div class="col-md-6 text-center text-md-end">
+                            <div class="footer-menu">
+                                <a href="">Home</a>
+                                <a href="">Cookies</a>
+                                <a href="">Help</a>
+                                <a href="">FQAs</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Footer End -->
+
+
+        <!-- Back to Top -->
+        <a href="#" class="btn btn-lg btn-primary btn-lg-square back-to-top"><i class="bi bi-arrow-up"></i></a>
+    </div>
+
+    <!-- JavaScript Libraries -->
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/lib/wow/wow.min.js"></script>
+    <script src="/static/lib/easing/easing.min.js"></script>
+    <script src="/static/lib/waypoints/waypoints.min.js"></script>
+    <script src="/static/lib/counterup/counterup.min.js"></script>
+    <script src="/static/lib/owlcarousel/owl.carousel.min.js"></script>
+    <script src="https://gitcdn.github.io/bootstrap-toggle/2.2.2/js/bootstrap-toggle.min.js"></script>
+
+    <!-- Template Javascript -->
+    <script src="/static/js/main.js"></script>
+    <script>
+
+        const setPricingInfo = (tier, price, unit) => {
+            $(`#tier-${tier}-price`).html(price);
+            $(`#tier-${tier}-price-unit`).html(unit);
+        }
+
+        $(function() {
+            $('#pricing-period-toggle').bootstrapToggle();
+            $('#pricing-period-toggle').bootstrapToggle('on');
+            $('#pricing-period-toggle').change(function() {
+                console.log();
+
+                if ($(this).prop('checked')) {    // monthly
+                    setPricingInfo(1, 0, 'per month forever');
+                    setPricingInfo(2, 24, 'per user/month');
+                } else {        // yearly
+                    setPricingInfo(1, 0, 'per year forerver');
+                    setPricingInfo(2, 260, 'per user/year');
+                }
+            });
+        });
+
+        const validateEmail = (email) => {
+            return String(email)
+                .toLowerCase()
+                .match(
+                /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+                );
+        };
+
+        const addToWaitingList = () => {
+            const email = $('input#join-waiting-list-email').val();
+            if (!email) return;
+            if (!validateEmail(email)) return;
+
+            console.log(email);
+            $.ajax({
+                method: 'POST',
+                url: '/join-waiting-list',
+                data: {
+                    email: email
+                },
+                success: function(data) {
+                    console.log(data);
+                }
+            });
+        };
+
+        const addToNewsletter = () => {
+            const email = $('input#join-newsletter-email').val();
+            if (!email) return;
+            if (!validateEmail(email)) return;
+
+            console.log(email);
+            $.ajax({
+                method: 'POST',
+                url: '/join-newsletter',
+                data: {
+                    email: email
+                },
+                success: function(data) {
+                    console.log(data);
+                }
+            });
+        }
+
+    </script>
+</body>
+
+</html>
