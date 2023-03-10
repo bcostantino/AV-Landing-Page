@@ -10,7 +10,7 @@ body{
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--dark);
+  /*background: var(--dark);*/
 }
 .wrapper{
   position: relative;
@@ -51,7 +51,7 @@ form .input-box input{
   padding: 0 15px;
   font-size: 17px;
   font-weight: 400;
-  color: #333;
+  /*color: #333;*/
   border: 1.5px solid #C7BEBE;
   border-bottom-width: 2.5px;
   border-radius: 6px;
@@ -92,4 +92,35 @@ form .text h3 a{
 }
 form .text h3 a:hover{
   text-decoration: underline;
+}
+
+/* The message box is shown when the user clicks on the password field */
+#message {
+  display:none;
+  background: #f1f1f1;
+  color: #000;
+  position: relative;
+  padding: 20px;
+  margin-top: 10px;
+  line-height: 15px;
+}
+
+#message p {
+  padding: 10px 35px;
+  font-size: 18px;
+}
+
+/* Add a green text color and a checkmark when the requirements are right */
+.valid {
+  color: green;
+}
+
+/* Add a red text color and an "x" icon when the requirements are wrong */
+.invalid {
+  color: red;
+}
+
+input.text-input {
+  background-color: var(--light);
+  color: var(--dark);
 }

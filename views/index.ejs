@@ -21,7 +21,7 @@
         }
 
         div.price-card-notify-header {
-            height: 24px;
+            height: 30px;
             text-align: center;
         }
 
@@ -93,8 +93,17 @@
         }
 
         .toggle-group > .toggle-handle.btn.btn-default {
-            background-color: rgb(232, 232, 232);
+            background-color: white;
             
+        }
+
+        .toggle-on.btn {
+            padding-right: 2.5rem;
+        }
+
+        .toggle-off.btn {
+            padding-left: 2.5rem;
+            background-color: var(--light);
         }
 
         /*div.toggle.btn {
@@ -119,8 +128,8 @@
         <!-- Spinner End -->
         
         <!-- Navbar & Hero Start -->
-        <div class="container-xxl position-relative p-0 pb-5" id="home">
-            <%- include('./partials/navbar', { active_page: "home" }); %>
+        <div class="container-xxl position-relative p-0 pb-2" id="home">
+            <%- include('./partials/navbar2', { active_page: "home" }); %>
 
             <div class="container-xxl hero-header">
                 <div class="container">
@@ -135,8 +144,12 @@
                             </p>
                             <div class="position-relative w-100 mt-3">
                                 <!--<form action="forms/join_waiting_list.php" method="POST">-->
-                                <input id="join-waiting-list-email" name="email" class="form-control border-2 rounded-pill w-100 ps-4 pe-5" type="text" placeholder="Your Email" style="height: 58px;">
-                                <button onclick="addToWaitingList()" class="btn btn-primary rounded-pill py-2 px-3 shadow-none position-absolute top-0 end-0 m-2">Join the Waiting List</button>
+                                <div class="input-group mb-3">
+                                    <input style="color: var(--dark);" type="email" class="form-control border-primary" placeholder="name@example.com" aria-label="Recipient's email" aria-describedby="button-addon2">
+                                    <button style="font-size: small;" class="btn btn-primary p-2" type="button" id="button-addon2">Join the waiting list</button>
+                                </div>
+                                <!--<input id="join-waiting-list-email" name="email" class="form-control border-2 rounded-pill w-100 ps-4 pe-5" type="text" placeholder="Your Email" style="height: 58px;">
+                                <button onclick="addToWaitingList()" class="btn btn-primary rounded-pill py-2 px-3 shadow-none position-absolute top-0 end-0 m-2">Join the Waiting List</button>-->
                             </div>
                         </div>
                         <div class="col-lg-6 text-center text-lg-start">
@@ -154,7 +167,7 @@
             <div class="container">
                 <div class="row g-4">
                     <div class="col-lg-4 wow fadeInUp" data-wow-delay="0.1s">
-                        <div class="feature-item bg-light rounded text-center p-5">
+                        <div class="feature-item bg-light rounded text-center p-4">
                             <i class="fa fa-4x fa-project-diagram text-primary mb-4"></i>
                             <h5 class="mb-3">Control-Flow Management</h5>
                             <p class="m-0">
@@ -163,7 +176,7 @@
                         </div>
                     </div>
                     <div class="col-lg-4 wow fadeInUp" data-wow-delay="0.3s">
-                        <div class="feature-item bg-light rounded text-center p-5">
+                        <div class="feature-item bg-light rounded text-center p-4">
                             <i class="fa fa-4x fa-database text-primary mb-4"></i>
                             <h5 class="mb-3">Data Handling / Storage</h5>
                             <p class="m-0">
@@ -173,7 +186,7 @@
                         </div>
                     </div>
                     <div class="col-lg-4 wow fadeInUp" data-wow-delay="0.5s">
-                        <div class="feature-item bg-light rounded text-center p-5">
+                        <div class="feature-item bg-light rounded text-center p-4">
                             <i class="fa fa-4x fa-chart-line text-primary mb-4"></i>
                             <h5 class="mb-3">Dashboard Portal</h5>
                             <p class="m-0">
@@ -188,18 +201,18 @@
 
 
         <!-- About Start -->
-        <div class="container-xxl py-6" id="about">
+        <div class="container-xxl py-4" id="about">
             <div class="container">
                 <div class="row g-5 flex-column-reverse flex-lg-row" style="margin: 0 3rem 0 3rem;">
                     <div class="col-lg-6 wow fadeInUp" data-wow-delay="0.1s">
-                        <h1 class="mb-4">The IoT System Management Platform</h1>
-                        <h4 class="mb-4" style="font-weight: 300 !important;">
+                        <h1 class="mb-3">The IoT System Management Platform</h1>
+                        <h4 class="mb-3" style="font-weight: 300 !important;">
                             Deliver better systems faster with one platform for all of your data, control, and security pipelines.
                         </h4>
                         <!--<p class="mb-4">
                             
                         </p>-->
-                        <div class="d-flex mb-4">
+                        <div class="d-flex mb-2">
                             <div class="flex-shrink-0 btn-square rounded-circle bg-primary text-white">
                                 <i class="fa fa-check"></i>
                             </div>
@@ -211,7 +224,7 @@
                                 </p>
                             </div>
                         </div>
-                        <div class="d-flex mb-4">
+                        <div class="d-flex mb-2">
                             <div class="flex-shrink-0 btn-square rounded-circle bg-primary text-white">
                                 <i class="fa fa-check"></i>
                             </div>
@@ -223,7 +236,7 @@
                                 </p>
                             </div>
                         </div>
-                        <div class="d-flex mb-4">
+                        <div class="d-flex mb-2">
                             <div class="flex-shrink-0 btn-square rounded-circle bg-primary text-white">
                                 <i class="fa fa-check"></i>
                             </div>
@@ -235,7 +248,7 @@
                                 </p>
                             </div>
                         </div>
-                        <a href="" class="btn btn-primary py-sm-3 px-sm-5 rounded-pill mt-3">Read More</a>
+                        <a href="" class="btn btn-primary py-sm-2 px-sm-4 rounded-pill mt-3">Read More</a>
                     </div>
                     <div class="col-lg-6">
                         <img class="img-fluid rounded wow zoomIn" data-wow-delay="0.5s" src="img/about.jpg">
@@ -247,7 +260,7 @@
 
 
         <!-- Overview Start -->
-        <div class="container-xxl bg-light my-4 py-4" id="overview">
+        <div class="container-xxl bg-light my-4 p-4" id="overview">
             <div class="container">
                 <div class="row g-5 py-5 align-items-center">
                     <div class="col-lg-6 wow fadeInUp" data-wow-delay="0.1s">
@@ -321,7 +334,7 @@
                 </div>
                 <div class="row g-4 p-4">
                     <div class="col-lg-3 col-md-6 wow fadeInUp" data-wow-delay="0.1s">
-                        <div class="advanced-feature-item text-center rounded py-5 px-4">
+                        <div class="advanced-feature-item text-center rounded px-3 py-4">
                             <i class="fa fa-3x fa-project-diagram text-primary mb-4"></i>
                             <h5 class="mb-3">Control-Flow Management</h5>
                             <p class="m-0">
@@ -330,7 +343,7 @@
                         </div>
                     </div>
                     <div class="col-lg-3 col-md-6 wow fadeInUp" data-wow-delay="0.3s">
-                        <div class="advanced-feature-item text-center rounded py-5 px-4">
+                        <div class="advanced-feature-item text-center rounded px-3 py-4">
                             <i class="fa fa-3x fa-database text-primary mb-4"></i>
                             <h5 class="mb-3">Data Handling / Storage</h5>
                             <p class="m-0">
@@ -339,7 +352,7 @@
                         </div>
                     </div>
                     <div class="col-lg-3 col-md-6 wow fadeInUp" data-wow-delay="0.5s">
-                        <div class="advanced-feature-item text-center rounded py-5 px-4">
+                        <div class="advanced-feature-item text-center rounded px-3 py-4">
                             <i class="fa fa-3x fa-shield-alt text-primary mb-4"></i>
                             <h5 class="mb-3">Security</h5>
                             <p class="m-0">
@@ -348,7 +361,7 @@
                         </div>
                     </div>
                     <div class="col-lg-3 col-md-6 wow fadeInUp" data-wow-delay="0.7s">
-                        <div class="advanced-feature-item text-center rounded py-5 px-4">
+                        <div class="advanced-feature-item text-center rounded px-3 py-4">
                             <i class="fa fa-3x fa-code text-primary mb-4"></i>
                             <h5 class="mb-3">Drag And Drop</h5>
                             <p class="m-0">Erat ipsum justo amet duo et elitr dolor, est duo duo eos lorem sed diam stet.</p>
@@ -492,13 +505,13 @@
                             data-width="150">
                 </div>
 
-                <div class="row g-4">
+                <div class="row g-2">
                     <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="0.1s">
-                        <div class="price-item-total px-2 pb-1 pt-3">
+                        <div class="price-item-total p-2">
                             <div class="price-card-notify-header">
                             </div>
                             <div class="price-item rounded overflow-hidden">
-                                <div class="header bg-white p-4">
+                                <div class="header bg-white p-3">
                                     <h4 class="text-black mt-2 mb-0">Free</h4>
                                     <div class="header-desc mb-2 small">
                                         The basics for learning and prototyping
@@ -512,10 +525,10 @@
                                         Create a free workspace
                                     </a>
                                 </div>
-                                <div class="bg-light text-dark p-4 small">
+                                <div class="bg-light text-dark p-3 small">
                                     <details class="my-2">
                                         <summary><b>1,000 task minutes/month</b></summary>
-                                        <div class="my-2 ms-3">
+                                        <div class="my-2 ms-2">
                                             Use execution minutes with AutoViz Directives to automate your 
                                             system control pipelines. Write tasks and combine them to read, 
                                             write, and signal nodes in your network.
@@ -523,19 +536,19 @@
                                     </details>
                                     <details class="my-2">
                                         <summary><b>200 MB live data storage</b></summary>
-                                        <div class="my-2 ms-3">
+                                        <div class="my-2 ms-2">
                                             Host your own live database. Both private and public hosting available. 
                                         </div>
                                     </details>
                                     <details class="my-2">
                                         <summary><b>Notifications & Alerts</b></summary>
-                                        <div class="my-2 ms-3">
+                                        <div class="my-2 ms-2">
                                             Recieve custom notifications and alerts for critical events within your system.
                                         </div>
                                     </details>
                                     <details class="my-2">
                                         <summary><b>Community support</b></summary>
-                                        <div class="my-2 ms-3">
+                                        <div class="my-2 ms-2">
                                             Get help with most of your AutoViz questions and issues in our 
                                             Community Forum.
                                         </div>
@@ -545,12 +558,12 @@
                         </div>
                     </div>
                     <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="0.3s">
-                        <div class="price-item-total active rounded px-2 pb-2 pt-2">
-                            <div class="price-card-notify-header mb-1">
+                        <div class="price-item-total rounded active p-2">
+                            <div class="price-card-notify-header">
                                 <h6 style="color: white;">MOST POPULAR</h6>
                             </div>
                             <div class="price-item rounded overflow-hidden">
-                                <div class="header bg-white p-4">
+                                <div class="header bg-white p-3">
                                     <h4 class="text-black mt-2 mb-0">Standard</h4>
                                     <div class="header-desc mb-2 small">
                                         Advanced collaboration for individuals and organizations
@@ -561,16 +574,16 @@
                                         <h1 id="tier-2-price" class="d-inline display-6 text-dark mb-0"> 24</h1>
                                         <span id="tier-2-price-unit" class="align-baseline">per user/month</span>
                                     </div>
-                                    <a href="" class="btn btn-light rounded py-2 px-4 my-3" style="width: 100%;">Get Started</a>
+                                    <a href="" class="btn btn-light rounded py-2 px-4 my-3 w-100">Get Started</a>
                                 </div>
-                                <div class="bg-light text-dark p-4 small">
-                                    <div class="mb-3">
+                                <div class="bg-light text-dark p-3 small">
+                                    <div class="mb-2">
                                         <i class="fa fa-arrow-left"></i>
                                         Everything included in Free, plus...
                                     </div>
                                     <details class="my-2">
                                         <summary><b>Unlimited workspaces</b></summary>
-                                        <div class="my-2 ms-3">
+                                        <div class="my-2 ms-2">
                                             Use execution minutes with AutoViz Directives to automate your 
                                             system control pipelines. Write tasks and combine them to read, 
                                             write, and signal nodes in your network.
@@ -578,7 +591,7 @@
                                     </details>
                                     <details class="my-2">
                                         <summary><b>2,000 task minutes/month</b></summary>
-                                        <div class="my-2 ms-3">
+                                        <div class="my-2 ms-2">
                                             Use execution minutes with AutoViz Directives to automate your 
                                             system control pipelines. Write tasks and combine them to read, 
                                             write, and signal nodes in your network.
@@ -586,19 +599,19 @@
                                     </details>
                                     <details class="my-2">
                                         <summary><b>10 GB live data storage</b></summary>
-                                        <div class="my-2 ms-3">
+                                        <div class="my-2 ms-2">
                                             Host your own live database. Both private and public hosting available. 
                                         </div>
                                     </details>
                                     <details class="my-2">
                                         <summary><b>Device logs</b></summary>
-                                        <div class="my-2 ms-3">
+                                        <div class="my-2 ms-2">
                                             Recieve custom notifications and alerts for critical events within your system.
                                         </div>
                                     </details>
                                     <details class="my-2">
                                         <summary><b>Web-based support</b></summary>
-                                        <div class="my-2 ms-3">
+                                        <div class="my-2 ms-2">
                                             AutoViz Support can help you troubleshoot issues 
                                             you run into while using our platform.
                                         </div>
@@ -608,11 +621,11 @@
                         </div>
                     </div>
                     <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="0.3s">
-                        <div class="price-item-total rounded px-2 pb-2 pt-2">
-                            <div class="price-card-notify-header mb-1">
+                        <div class="price-item-total rounded p-2">
+                            <div class="price-card-notify-header">
                             </div>
                             <div class="price-item rounded overflow-hidden">
-                                <div class="header bg-white p-4">
+                                <div class="header bg-white p-3">
                                     <h4 class="text-black mt-2 mb-0">Enterprise</h4>
                                     <div class="header-desc mb-2 small">
                                         Security, compliance, and flexibility for large organizations
@@ -623,21 +636,18 @@
                                         <h1 class="d-inline display-6 text-dark mb-0">96</h1>
                                         <span class="align-baseline">per user/month</span>
                                     </div>
-                                    <a href="" class="btn btn-dark rounded py-2 px-4 my-3" style="float: left; width: auto;">
-                                        Start a Free trial
-                                    </a>
-                                    <a href="" class="btn btn-light rounded py-2 px-4 my-3" style="width: 50%;">
+                                    <a href="" class="btn btn-light rounded py-2 px-4 my-3 w-100">
                                         Get Started
                                     </a>
                                 </div>
-                                <div class="bg-light text-dark p-4 small">
-                                    <div class="mb-3">
+                                <div class="bg-light text-dark p-3 small">
+                                    <div class="mb-2">
                                         <i class="fa fa-arrow-left"></i>
                                         Everything included in Standard, plus...
                                     </div>
                                     <details class="my-2">
                                         <summary><b>Unlimited workspaces</b></summary>
-                                        <div class="my-2 ms-3">
+                                        <div class="my-2 ms-2">
                                             Use execution minutes with AutoViz Directives to automate your 
                                             system control pipelines. Write tasks and combine them to read, 
                                             write, and signal nodes in your network.
@@ -797,8 +807,8 @@
                         </p>
                         <div class="position-relative w-100 mt-3">
                             <!--<form action="forms/join_newsletter.php" method="POST">-->
-                            <input id="join-newsletter-email" name="email" class="form-control border-0 rounded-pill w-100 ps-4 pe-5" type="text" placeholder="Your Email" style="height: 48px;">
-                            <button onclick="addToNewsletter()" class="btn shadow-none position-absolute top-0 end-0 mt-1 me-2"><i class="fa fa-paper-plane text-primary fs-4"></i></button>    
+                            <input id="join-newsletter-email" name="email" class="form-control border-primary rounded-pill w-100 ps-3 pe-5" type="text" placeholder="Your Email" style="height: 48px;">
+                            <button onclick="addToNewsletter()" class="btn shadow-none position-absolute top-0 end-0"><i class="fa fa-paper-plane text-primary fs-4"></i></button>    
                         </div>
                     </div>
                 </div>
@@ -837,12 +847,12 @@
 
     <!-- JavaScript Libraries -->
     <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/static/lib/wow/wow.min.js"></script>
     <script src="/static/lib/easing/easing.min.js"></script>
     <script src="/static/lib/waypoints/waypoints.min.js"></script>
     <script src="/static/lib/counterup/counterup.min.js"></script>
     <script src="/static/lib/owlcarousel/owl.carousel.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://gitcdn.github.io/bootstrap-toggle/2.2.2/js/bootstrap-toggle.min.js"></script>
 
     <!-- Template Javascript -->

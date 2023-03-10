@@ -1,9 +1,12 @@
-<nav class="navbar navbar-expand-lg navbar-light px-4 px-lg-5 py-3 py-lg-0 sticky-top shadow-sm" style="min-height: 64px;">
+<nav class="navbar navbar-expand-lg navbar-light px-3 px-lg-3 py-3 py-lg-0 sticky-top shadow-sm" style="min-height: 64px;">
     <a href="/" class="navbar-brand p-0">
         <h3 class="m-0 text-dark"><i class="fa fa-network-wired me-2"></i><span style="font-weight: 300;">AUTO</span><span style="font-weight: 500;">VIZ</span></h3>
     </a>
     <% if (locals.active_page === 'home') { %>
-        <div id="navbar" class="collapse navbar-collapse" id="navbarCollapse">
+        <button class="navbar-toggler rounded-pill" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse1">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarCollapse1">
             <div class="navbar-nav mx-auto py-0">
                 <a href="#home" class="nav-item nav-link active">Home</a>
                 <a href="#about" class="nav-item nav-link">About</a>
@@ -13,17 +16,16 @@
                 <!--<a href="#testimonial" class="nav-item nav-link">Testimonial</a>-->
                 <a href="#contact" class="nav-item nav-link">Contact</a>
             </div>
-            <a href="" class="btn btn-light rounded-pill py-2 px-4 ms-3 d-none d-lg-block">Free Trail</a>
+            <a href="" class="btn btn-light rounded-pill py-1 px-3 ms-3 d-none d-lg-block">Free Trial</a>
         </div>
     <% } else if (locals.active_page === 'profile') { %>
-        <div class="navbar-nav mx-auto py-0">
-            
-        </div>
-        <div id="navbar" class="collapse navbar-collapse" id="navbarCollapse">
-            <a href="" class="btn btn-dark rounded-pill py-2 px-4 ms-3 d-none d-lg-block">Open App</a>
+        <button class="navbar-toggler rounded-pill" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse2">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarCollapse2">
+            <div class="navbar-nav ms-auto py-0">
+                <a href="" class="nav-item btn btn-dark active">Open App</a>
+            </div>
         </div>
     <% } %>
-    <button class="navbar-toggler rounded-pill" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">
-        <span class="navbar-toggler-icon"></span>
-    </button>
 </nav>

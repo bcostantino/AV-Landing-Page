@@ -2,10 +2,13 @@
 <!-- Coding by CodingLab | www.codinglabweb.com-->
 <html lang="en" dir="ltr">
   <head>
+    <link rel="preconnect" href="https://www.google.com">
+    <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+    <script src="https://www.google.com/recaptcha/api.js?render=explicit"></script>
     <%- include('./partials/head'); %>
     <link href="/static/css/style.css" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/signup_style.css">
-    <style>
+    <!--<style>
       /* The message box is shown when the user clicks on the password field */
       #message {
         display:none;
@@ -43,7 +46,7 @@
         left: -35px;
         content: "&#10006;";
       }*/
-    </style>
+    </style>-->
   </head>
   <body>
     <%- include('./partials/navbar', { active_page: "signup" }); %>
@@ -52,13 +55,13 @@
       <h2>Registration</h2>
       <form id="sign-up-form" action="/signup">
         <div class="input-box">
-          <input id="name" type="text" placeholder="Enter your name" required>
+          <input id="name" class="text-input" type="text" placeholder="Enter your name" required>
         </div>
         <div class="input-box">
-          <input id="email" type="text" placeholder="Enter your email" required>
+          <input id="email" class="text-input" type="text" placeholder="Enter your email" required>
         </div>
         <div class="input-box">
-          <input id="password" type="password" placeholder="Create password" required>
+          <input id="password" class="text-input" type="password" placeholder="Create password" required>
         </div>
         <div id="message">
           <h3>Password must contain the following:</h3>
@@ -68,11 +71,14 @@
           <span id="length" class="invalid">Minimum <b>8 characters</b></span>
         </div>
         <div class="input-box">
-          <input id="password-confirm" type="password" placeholder="Confirm password" required>
+          <input id="password-confirm" class="text-input" type="password" placeholder="Confirm password" required>
         </div>
         <div class="policy">
           <input type="checkbox">
-          <h3>I accept all <a href="">terms & conditions</a></h3>
+          <h3 style="margin: auto 0.5rem;">I accept all <a href="">terms & conditions</a></h3>
+        </div>
+        <div id="recaptcha" class="mx-auto my-3" style="max-width: max-content;">
+
         </div>
         <div class="input-box button">
           <input class="btn btn-light rounded" type="Submit" value="Register Now">
@@ -86,6 +92,39 @@
 
   <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
   <script>
+    $(document).ready(function() {
+      // How this code snippet works:
+      // This logic overwrites the default behavior of `grecaptcha.ready()` to
+      // ensure that it can be safely called at any time. When `grecaptcha.ready()`
+      // is called before reCAPTCHA is loaded, the callback function that is passed
+      // by `grecaptcha.ready()` is enqueued for execution after reCAPTCHA is
+      // loaded.
+      if(typeof grecaptcha === 'undefined') {
+        grecaptcha = {};
+      }
+      grecaptcha.ready = function(cb){
+        if(typeof grecaptcha === 'undefined') {
+          // window.__grecaptcha_cfg is a global variable that stores reCAPTCHA's
+          // configuration. By default, any functions listed in its 'fns' property
+          // are automatically executed when reCAPTCHA loads.
+          const c = '___grecaptcha_cfg';
+          window[c] = window[c] || {};
+          (window[c]['fns'] = window[c]['fns']||[]).push(cb);
+        } else {
+          cb();
+        }
+      }
+
+      // If reCAPTCHA is still loading, grecaptcha will be undefined.
+      grecaptcha.ready(function(){
+        console.log('grecaptcha: ', grecaptcha);
+        grecaptcha.render("recaptcha", {
+          sitekey: "6LeC9OkkAAAAAAIVaphcEmTntM70qVDHhRTf9zCS",
+          //callback: updateSubmitEnabled
+        });
+      });
+    });
+
     // this is the id of the form
     $("#sign-up-form").submit(function(e) {
       e.preventDefault(); // avoid to execute the actual submit of the form.
@@ -102,8 +141,9 @@
         url: url,
         data: data, //form.serialize(), // serializes the form's elements.
         success: function(data) {
+          console.log('signup response data: ', data);
           //alert(data); // show response
-          window.location.href = "/profile";
+          //window.location.href = "/profile";
         }
       }); 
     });

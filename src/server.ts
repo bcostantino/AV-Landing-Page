@@ -1,23 +1,28 @@
-const express = require('express');
-const session = require('express-session');
-const path = require('path');
-const jwt = require('jsonwebtoken');
-const { dbTest, createUser, findUserByEmail, validateEmail, validateLogin } = require('./auth')
-const cookieParser = require("cookie-parser");
+//const express = require('express');
+//const session = require('express-session');
+//const path = require('path');
+//const jwt = require('jsonwebtoken');
+//const { dbTest, createUser, findUserByEmail, validateEmail, validateLogin } = require('./auth')
+//const cookieParser = require("cookie-parser");
+import express from 'express';
+import session from 'express-session';
+import * as path from 'path';
+import * as jwt from 'jsonwebtoken';
+import cookieParser from 'cookie-parser';
+import { dbTest, createUser, findUserByEmail, validateEmail, validateLogin, sendEmailVerification, findActiveUserEmailVerificationByKey, deactivateUserEmailVerificationById, setUserEmailVerifiedById } from './auth';
 
+/** see https://www.digitalocean.com/community/tutorials/nodejs-jwt-expressjs */
+import dotenv from 'dotenv';
+dotenv.config();   // get config vars
 
 // This is your test secret API key.
-const stripe = require('stripe')('sk_test_51MfAswDOqtt0qJJAK3BSTOyAI3GsMpl5P62VFVd8t3IjknPD0vj2EPEoTphLZuvS3JzUWUsfGBljEK0nRX97XcLa00XLQ6rgEO');
+const stripe = require('stripe')(process.env.STRIPE_API_KEY /*'sk_test_51MfAswDOqtt0qJJAK3BSTOyAI3GsMpl5P62VFVd8t3IjknPD0vj2EPEoTphLZuvS3JzUWUsfGBljEK0nRX97XcLa00XLQ6rgEO'*/);
 
 const app = express();
 
 
-/** see https://www.digitalocean.com/community/tutorials/nodejs-jwt-expressjs */
-const dotenv = require('dotenv');
-dotenv.config();   // get config vars
-
 function generateAccessToken(payload) {
-  return jwt.sign(payload, process.env.TOKEN_SECRET, { expiresIn: '1800s' });
+  return jwt.sign(payload, process.env.JWT_TOKEN_SECRET, { expiresIn: '1800s' });
 }
 
 function authenticateToken(req, res, next) {
@@ -30,7 +35,7 @@ function authenticateToken(req, res, next) {
     return res.sendStatus(401);
   }
 
-  jwt.verify(token, process.env.TOKEN_SECRET, (err, payload) => {
+  jwt.verify(token, process.env.JWT_TOKEN_SECRET, (err, payload) => {
 
     if (err) {
       console.error(err);
@@ -115,7 +120,7 @@ app.post('/billing/webhook', express.raw({ type: "*/*" }), (request, response) =
   // If you are using an endpoint defined with the API or dashboard, look in your webhook settings
   // at https://dashboard.stripe.com/webhooks { type: 'application/json' }
   //const endpointSecret = 'whsec_12345';
-  const endpointSecret = 'whsec_58c0e0a1909e25b55e06da931202be7579e2c04ce515999ca7fd9b76b8c8c819';
+  const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET; //'whsec_58c0e0a1909e25b55e06da931202be7579e2c04ce515999ca7fd9b76b8c8c819';
   // Only verify the event if you have an endpoint secret defined.
   // Otherwise use the basic event deserialized with JSON.parse
   if (endpointSecret) {
@@ -211,7 +216,7 @@ app.post('/signup', async (req,res) => {
 
   if (!name || !email || !password) return res.sendStatus(400);
   if (password !== passwordConfirm) return res.sendStatus(400);
-  if (!validateEmail(email)) return res.status(400);
+  if (!validateEmail(email)) return res.sendStatus(400);
 
   const existingUser = await findUserByEmail(email);
   if (existingUser) return res.sendStatus(409);
@@ -219,7 +224,9 @@ app.post('/signup', async (req,res) => {
   const user = await createUser(name, email, password);
   console.log('created user: ', user);
 
-  req.session.user = user;
+  await sendEmailVerification(user);
+
+  req.session['user'] = user;
   const token = generateAccessToken({ 
     user: {
       email: user.email
@@ -241,8 +248,8 @@ app.post('/signin', async (req,res) => {
     return res.status(400).send();
   }
 
-  req.session.loggedIn = true;
-  req.session.user = user;
+  req.session['loggedIn'] = true;
+  req.session['user'] = user;
 
   const token = generateAccessToken({ 
     user: {
@@ -254,9 +261,30 @@ app.post('/signin', async (req,res) => {
   res.status(200).send();
 });
 
+app.get('/verify-email/:verification_key', async (req, res) => {
+  const verificationKey = req.params['verification_key'];
+  const verification = await findActiveUserEmailVerificationByKey(verificationKey);
+
+  if (!verification)
+    return res.status(410).send('Verification link inactive');
+  
+  if (new Date() > verification['expires_at']) {
+    await deactivateUserEmailVerificationById(verification['id']);
+    return res.status(498).send('Verification link expired');
+  }
+
+  await setUserEmailVerifiedById(verification['user_id']);
+  await deactivateUserEmailVerificationById(verification['id']);
+
+  console.log(verificationKey, verification);
+
+  res.redirect('/signin');
+});
+
 app.get('/profile', authenticateToken, async (req,res) => {
   console.log(req.session);
-  if (!req.session.user['email_verified']) res.locals.alert = "You need to verify your email";
+  res.locals.user = req.session['user'];
+  if (!req.session['user']['email_verified']) res.locals.alert = "You need to verify your email";
   res.render('profile');
 });
 

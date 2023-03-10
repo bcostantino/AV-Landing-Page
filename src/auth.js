@@ -25,11 +25,16 @@ const getRandomString = (len = 20) => {
   return Array(len).fill(pwdChars).map((x) => { return x[Math.floor(Math.random() * x.length)] }).join('');
 }
 
-const DEFAULT_SALT = '3x4m1n3w4171n6';
-const saltNHash = (rawText) => {
-  const salt = getRandomString(); //DEFAULT_SALT;
+const SALT_LENGTH = 20;
+
+const _hash_sha512 = (text) => {
+  return crypto.createHash('sha512').update(text);
+}
+
+const saltNHash = (rawText, hash = '') => {
+  const salt = (hash) ? hash : getRandomString(SALT_LENGTH); //DEFAULT_SALT;
   const saltedText = salt + rawText;
-  const sha = crypto.createHash('sha512').update(saltedText);
+  const sha = _hash_sha512(saltedText);
   return {
     value: sha.digest('hex'),
     salt: salt
@@ -38,23 +43,32 @@ const saltNHash = (rawText) => {
 
 const toPassword = (saltHash) => {
   const salt = saltHash.salt;
-  const partOne = salt.slice(0, salt / 2);
-  const partTwo = salt.slice(salt / 2, salt);
+  const partOne = salt.slice(0, SALT_LENGTH / 2);
+  const partTwo = salt.slice(SALT_LENGTH / 2, SALT_LENGTH);
   return `${partOne}${saltHash.value}${partTwo}`;
 }
 
-const getUserById = async (id) => {
+const fromPassword = (pwd) => {
+  const salt = pwd.slice(0, SALT_LENGTH / 2) + pwd.slice(pwd.length - (SALT_LENGTH / 2), pwd.length);
+  const hashedPassword = pwd.slice(SALT_LENGTH / 2, pwd.length - (SALT_LENGTH / 2));
+  return {
+    value: hashedPassword,
+    salt: salt
+  };
+}
+
+const findUserById = async (id) => {
   const results = await dbQuery('SELECT * FROM users WHERE id = ?', [id]);
   return (results.length) ? results[0] : null;
 }
 
-const getUserByEmail = async (email) => {
+const findUserByEmail = async (email) => {
   const results = await dbQuery('SELECT * FROM users WHERE email = ?', [email]);
   return (results.length) ? results[0] : null;
 }
 
 const createUser = async (name, email, password) => {
-  const existingUser = await getUserByEmail(email);
+  const existingUser = await findUserByEmail(email);
   if (existingUser) return;
 
   const defaultUsername = `${name.replace(' ', '_').toLowerCase()}_${Math.floor(Math.random() * 10000)}`;
@@ -63,7 +77,18 @@ const createUser = async (name, email, password) => {
 
   const results = await dbQuery('INSERT INTO users(name,username,email,password) VALUES(?,?,?,?)', [name, defaultUsername, email, hashedPassword]);
   console.log(results);
-  return (await getUserById(results['insertId']));
+  return (await findUserById(results['insertId']));
+}
+
+const validateLogin = async (user, password) => {
+  const pwd = fromPassword(user['password']);
+
+  return pwd.value === saltNHash(password, pwd.salt).value;
+
+  console.log('password decoded from db: ', pwd);
+  console.log('password from user: ', password);
+  console.log('password salted and hashed', saltNHash(password, pwd.salt));
+  console.log('result: ', pwd.value === saltNHash(password, pwd.salt).value);
 }
 
 const dbTest = async () => {
@@ -71,8 +96,18 @@ const dbTest = async () => {
   console.log(results);
 }
 
+const validateEmail = (email) => {
+  return String(email)
+    .toLowerCase()
+    .match(
+      /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+    );
+};
+
 module.exports = {
   dbTest,
   createUser,
-  getUserByEmail
+  findUserByEmail,
+  validateEmail,
+  validateLogin
 }

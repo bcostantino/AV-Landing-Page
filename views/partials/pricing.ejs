@@ -1,0 +1,229 @@
+<style>
+    div.price-item > div.header {
+        text-align: center;
+    }
+
+    div.price-item > div.header > div.header-desc {
+        max-width: 14rem;
+        margin: auto;
+    }
+
+    div.price-item > div.header div.pricing-data * {
+        font-family: monospace;
+    }
+
+    div.price-card-notify-header {
+        height: 30px;
+        text-align: center;
+    }
+
+    div.price-item-total.active {
+        background-color: var(--primary);
+    }
+
+    /* The switch - the box around the slider */
+    .switch {
+        position: relative;
+        display: inline-block;
+        width: 60px;
+        height: 34px;
+    }
+
+    /* Hide default HTML checkbox */
+    .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+</style>
+<div class="mx-auto mb-5 text-center wow fadeInUp" data-wow-delay="0.1s" style="max-width: 600px;">
+    <h1 class="mb-3">Pricing Plan</h1>
+    <p class="mb-3">
+        Our simple, straightforward plans offer stability and predictability at the end of the month. No more surprise bills.
+    </p>
+
+
+    <h5 class="my-3">How often do you want to pay?</h5>
+    <!-- bootstrap toggle - see https://www.bootstraptoggle.com/ -->
+    <input id="pricing-period-toggle" 
+            type="checkbox" 
+            data-toggle="toggle" 
+            data-on="Monthly" data-off="Annually"
+            data-onstyle="primary" data-offstyle="light"
+            data-width="150">
+</div>
+<div class="row g-2">
+    <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="0.1s">
+        <div class="price-item-total p-2">
+            <div class="price-card-notify-header">
+            </div>
+            <div class="price-item rounded overflow-hidden">
+                <div class="header bg-white p-3">
+                    <h4 class="text-black mt-2 mb-0">Free</h4>
+                    <div class="header-desc mb-2 small">
+                        The basics for learning and prototyping
+                    </div>
+                    <div class="pricing-data">
+                        <span class="align-top fs-4 fw-bold">$</span>
+                        <h1 id="tier-1-price" class="d-inline display-6 text-black mb-0">0</h1>
+                        <span id="tier-1-price-unit" class="align-baseline small">per month forever</span>
+                    </div>
+                    <a href="" class="btn btn-dark rounded py-2 px-4 my-3" style="width: 100%;">
+                        Create a free workspace
+                    </a>
+                </div>
+                <div class="bg-light text-dark p-3 small">
+                    <details class="my-2">
+                        <summary><b>1,000 task minutes/month</b></summary>
+                        <div class="my-2 ms-2">
+                            Use execution minutes with AutoViz Directives to automate your 
+                            system control pipelines. Write tasks and combine them to read, 
+                            write, and signal nodes in your network.
+                        </div>
+                    </details>
+                    <details class="my-2">
+                        <summary><b>200 MB live data storage</b></summary>
+                        <div class="my-2 ms-2">
+                            Host your own live database. Both private and public hosting available. 
+                        </div>
+                    </details>
+                    <details class="my-2">
+                        <summary><b>Notifications & Alerts</b></summary>
+                        <div class="my-2 ms-2">
+                            Recieve custom notifications and alerts for critical events within your system.
+                        </div>
+                    </details>
+                    <details class="my-2">
+                        <summary><b>Community support</b></summary>
+                        <div class="my-2 ms-2">
+                            Get help with most of your AutoViz questions and issues in our 
+                            Community Forum.
+                        </div>
+                    </details>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="0.3s">
+        <div class="price-item-total rounded active p-2">
+            <div class="price-card-notify-header">
+                <h6 style="color: white;">MOST POPULAR</h6>
+            </div>
+            <div class="price-item rounded overflow-hidden">
+                <div class="header bg-white p-3">
+                    <h4 class="text-black mt-2 mb-0">Standard</h4>
+                    <div class="header-desc mb-2 small">
+                        Advanced collaboration for individuals and organizations
+                    </div>
+                    <div class="pricing-data">
+                        <!--<span class="fs-4 fw-bold" style="text-decoration: line-through;">$280</span>-->
+                        <span class="align-top fs-4 fw-bold">$</span>
+                        <h1 id="tier-2-price" class="d-inline display-6 text-dark mb-0"> 24</h1>
+                        <span id="tier-2-price-unit" class="align-baseline">per user/month</span>
+                    </div>
+                    <a href="" class="btn btn-light rounded py-2 px-4 my-3 w-100">Get Started</a>
+                </div>
+                <div class="bg-light text-dark p-3 small">
+                    <div class="mb-2">
+                        <i class="fa fa-arrow-left"></i>
+                        Everything included in Free, plus...
+                    </div>
+                    <details class="my-2">
+                        <summary><b>Unlimited workspaces</b></summary>
+                        <div class="my-2 ms-2">
+                            Use execution minutes with AutoViz Directives to automate your 
+                            system control pipelines. Write tasks and combine them to read, 
+                            write, and signal nodes in your network.
+                        </div>
+                    </details>
+                    <details class="my-2">
+                        <summary><b>2,000 task minutes/month</b></summary>
+                        <div class="my-2 ms-2">
+                            Use execution minutes with AutoViz Directives to automate your 
+                            system control pipelines. Write tasks and combine them to read, 
+                            write, and signal nodes in your network.
+                        </div>
+                    </details>
+                    <details class="my-2">
+                        <summary><b>10 GB live data storage</b></summary>
+                        <div class="my-2 ms-2">
+                            Host your own live database. Both private and public hosting available. 
+                        </div>
+                    </details>
+                    <details class="my-2">
+                        <summary><b>Device logs</b></summary>
+                        <div class="my-2 ms-2">
+                            Recieve custom notifications and alerts for critical events within your system.
+                        </div>
+                    </details>
+                    <details class="my-2">
+                        <summary><b>Web-based support</b></summary>
+                        <div class="my-2 ms-2">
+                            AutoViz Support can help you troubleshoot issues 
+                            you run into while using our platform.
+                        </div>
+                    </details>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4 col-md-6 wow fadeInUp" data-wow-delay="0.3s">
+        <div class="price-item-total rounded p-2">
+            <div class="price-card-notify-header">
+            </div>
+            <div class="price-item rounded overflow-hidden">
+                <div class="header bg-white p-3">
+                    <h4 class="text-black mt-2 mb-0">Enterprise</h4>
+                    <div class="header-desc mb-2 small">
+                        Security, compliance, and flexibility for large organizations
+                    </div>
+                    <div class="pricing-data">
+                        <span class="align-baseline">From</span>
+                        <span class="align-top fs-4 fw-bold">$</span>
+                        <h1 class="d-inline display-6 text-dark mb-0">96</h1>
+                        <span class="align-baseline">per user/month</span>
+                    </div>
+                    <a href="" class="btn btn-light rounded py-2 px-4 my-3 w-100">
+                        Get Started
+                    </a>
+                </div>
+                <div class="bg-light text-dark p-3 small">
+                    <div class="mb-2">
+                        <i class="fa fa-arrow-left"></i>
+                        Everything included in Standard, plus...
+                    </div>
+                    <details class="my-2">
+                        <summary><b>Unlimited workspaces</b></summary>
+                        <div class="my-2 ms-2">
+                            Use execution minutes with AutoViz Directives to automate your 
+                            system control pipelines. Write tasks and combine them to read, 
+                            write, and signal nodes in your network.
+                        </div>
+                    </details>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+    const setPricingInfo = (tier, price, unit) => {
+        $(`#tier-${tier}-price`).html(price);
+        $(`#tier-${tier}-price-unit`).html(unit);
+    }
+
+    $(function() {
+        $('#pricing-period-toggle').bootstrapToggle();
+        $('#pricing-period-toggle').bootstrapToggle('on');
+        $('#pricing-period-toggle').change(function() {
+            console.log();
+
+            if ($(this).prop('checked')) {    // monthly
+                setPricingInfo(1, 0, 'per month forever');
+                setPricingInfo(2, 24, 'per user/month');
+            } else {        // yearly
+                setPricingInfo(1, 0, 'per year forerver');
+                setPricingInfo(2, 260, 'per user/year');
+            }
+        });
+    });
+</script>

@@ -4,17 +4,30 @@
   "description": "A sample Stripe implementation",
   "main": "server.js",
   "scripts": {
-    "start": "node src/server.js"
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "dev": "./node_modules/nodemon/bin/nodemon.js -e ts  --exec \"tsc && npm start\""
   },
   "author": "Brian Costantino",
   "license": "ISC",
   "dependencies": {
+    "cookie-parser": "^1.4.6",
     "dotenv": "^16.0.3",
     "ejs": "^3.1.8",
     "express": "^4.17.1",
     "express-session": "^1.17.3",
     "jsonwebtoken": "^9.0.0",
     "mysql": "^2.18.1",
+    "nodemailer": "^6.9.1",
     "stripe": "^8.202.0"
+  },
+  "devDependencies": {
+    "@types/cookie-parser": "^1.4.3",
+    "@types/express": "^4.17.17",
+    "@types/express-session": "^1.17.6",
+    "@types/jsonwebtoken": "^9.0.1",
+    "@types/mysql": "^2.15.21",
+    "@types/nodemailer": "^6.4.7",
+    "nodemon": "^2.0.21"
   }
 }

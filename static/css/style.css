@@ -10,6 +10,7 @@ body {
     background-size: cover;
     background-repeat: no-repeat;
     background-attachment: fixed;*/
+    color: var(--dark);
 }
 
 
@@ -112,11 +113,11 @@ h6,
 
 /*** Navbar ***/
 .navbar .dropdown-toggle::after {
-    border: none;
+    /*border: none;
     content: "\f067";
     font-family: "Font Awesome 5 Free";
     font-size: 10px;
-    font-weight: bold;
+    font-weight: bold;*/
     vertical-align: middle;
     margin-left: 8px;
 }
@@ -129,6 +130,13 @@ h6,
     color: var(--light);
     outline: none;
     transition: .5s;
+}
+
+.navbar {
+    width: 100%;
+    top: 0;
+    left: 0;
+    z-index: 999;
 }
 
 .navbar .navbar-nav .nav-link:hover,
@@ -161,7 +169,7 @@ h6,
 
 @media (max-width: 991.98px) {
     .sticky-top.navbar {
-        position: relative;
+        position: fixed;
         background: #FFFFFF;
     }
 
@@ -445,4 +453,13 @@ h6,
 .footer .copyright a:hover,
 .footer .footer-menu a:hover {
     color: var(--secondary);
+}
+
+
+a {
+    color: var(--primary);
+}
+
+a:hover {
+    color: #322c9b;
 }
