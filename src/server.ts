@@ -1,31 +1,35 @@
-//const express = require('express');
-//const session = require('express-session');
-//const path = require('path');
-//const jwt = require('jsonwebtoken');
-//const { dbTest, createUser, findUserByEmail, validateEmail, validateLogin } = require('./auth')
-//const cookieParser = require("cookie-parser");
-import express from 'express';
-import session from 'express-session';
-import * as path from 'path';
-import * as jwt from 'jsonwebtoken';
-import cookieParser from 'cookie-parser';
-import { dbTest, createUser, findUserByEmail, validateEmail, validateLogin, sendEmailVerification, findActiveUserEmailVerificationByKey, deactivateUserEmailVerificationById, setUserEmailVerifiedById } from './auth';
 
 /** see https://www.digitalocean.com/community/tutorials/nodejs-jwt-expressjs */
 import dotenv from 'dotenv';
 dotenv.config();   // get config vars
 
-// This is your test secret API key.
-const stripe = require('stripe')(process.env.STRIPE_API_KEY /*'sk_test_51MfAswDOqtt0qJJAK3BSTOyAI3GsMpl5P62VFVd8t3IjknPD0vj2EPEoTphLZuvS3JzUWUsfGBljEK0nRX97XcLa00XLQ6rgEO'*/);
+/** imports */
+import express from 'express';
+import session from 'express-session';
+import * as path from 'path';
+import * as jwt from 'jsonwebtoken';
+import cookieParser from 'cookie-parser';
+import { dbTest, createUser, findUserByEmail, validateEmail, validateLogin, sendEmailVerification, findActiveUserEmailVerificationByKey, deactivateUserEmailVerificationById, setUserEmailVerifiedById, generateUUID } from './auth';
+import { getStripeCustomers, stripe, stripeWebhookHandler } from './licensing';
+import { User } from './models/auth';
 
 const app = express();
 
-
-function generateAccessToken(payload) {
-  return jwt.sign(payload, process.env.JWT_TOKEN_SECRET, { expiresIn: '1800s' });
+/**
+ * 
+ * @param payload Object with client data
+ * @param exp Expiratioon in seconds from creation
+ * @returns 
+ */
+function generateAccessToken(payload, exp = 1800) {
+  return jwt.sign({ 
+    ...payload, 
+    exp: Math.floor(Date.now() / 1000) + exp,
+    jti: generateUUID()
+  }, process.env.JWT_TOKEN_SECRET);
 }
 
-function authenticateToken(req, res, next) {
+function authenticateToken(req: express.Request, res: express.Response, next) {
   //const authHeader = req.headers['authorization'];
   //const token = authHeader && authHeader.split(' ')[1];
   /** use cookie instead of auth header */
@@ -38,11 +42,14 @@ function authenticateToken(req, res, next) {
   jwt.verify(token, process.env.JWT_TOKEN_SECRET, (err, payload) => {
 
     if (err) {
-      console.error(err);
-      return res.sendStatus(403);
+      console.warn('Caught exception in jwt verificaton... ', err);
+      //return res.sendStatus(403);
+      return res.redirect('/login');
     }
 
-    req.jwtPayload = payload;
+    //req.locals.jwtPayload = payload;
+    //req.session['jwtPayload'] = payload;
+    res.locals.jwtPayload = payload;
 
     next();
   });
@@ -59,19 +66,12 @@ const DOMAIN = `http://localhost:${PORT}`;
 
 
 /*   BILLING ROUTES    */
-app.get('/billing', (req, res) => {
+app.get('/billing', authenticateToken, (req, res) => {
   res.render('billing/checkout');
 });
 
-app.get('/billing/success', (req, res) => {
-  res.render('billing/success');
-});
-
-app.get('/billing/cancel', (req,res) => {
-  res.render('billing/cancel');
-});
-
-app.post('/billing/create-checkout-session', async (req, res) => {
+app.post('/billing/create-checkout-session', authenticateToken, async (req, res) => {
+  const user = req.session['jwtPayload'];
   const prices = await stripe.prices.list({
     lookup_keys: [req.body.lookup_key],
     expand: ['data.product'],
@@ -83,10 +83,10 @@ app.post('/billing/create-checkout-session', async (req, res) => {
         price: prices.data[0].id,
         // For metered billing, do not pass quantity
         quantity: 1,
-
       },
     ],
     mode: 'subscription',
+    client_reference_id: user,
     success_url: `${DOMAIN}/billing/success?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${DOMAIN}/billing/cancel`,
   });
@@ -94,7 +94,7 @@ app.post('/billing/create-checkout-session', async (req, res) => {
   res.redirect(303, session.url);
 });
 
-app.post('/billing/create-portal-session', async (req, res) => {
+app.post('/billing/create-portal-session', authenticateToken, async (req, res) => {
   // For demonstration purposes, we're using the Checkout session to retrieve the customer ID.
   // Typically this is stored alongside the authenticated user in your database.
   const { session_id } = req.body;
@@ -102,7 +102,7 @@ app.post('/billing/create-portal-session', async (req, res) => {
 
   // This is the url to which the customer will be redirected when they are done
   // managing their billing with the portal.
-  const returnUrl = DOMAIN;
+  const returnUrl = `${DOMAIN}`;
 
   const portalSession = await stripe.billingPortal.sessions.create({
     customer: checkoutSession.customer,
@@ -137,46 +137,27 @@ app.post('/billing/webhook', express.raw({ type: "*/*" }), (request, response) =
       return response.sendStatus(400);
     }
   }
-  let subscription;
-  let status;
+
   // Handle the event
-  console.log(`Stripe webhook invoked with event: ${event.type}`);
-  switch (event.type) {
-    case 'customer.subscription.trial_will_end':
-      subscription = event.data.object;
-      status = subscription.status;
-      console.log(`Subscription status is ${status}.`);
-      // Then define and call a method to handle the subscription trial ending.
-      // handleSubscriptionTrialEnding(subscription);
-      break;
-    case 'customer.subscription.deleted':
-      subscription = event.data.object;
-      status = subscription.status;
-      console.log(`Subscription status is ${status}.`);
-      // Then define and call a method to handle the subscription deleted.
-      // handleSubscriptionDeleted(subscriptionDeleted);
-      break;
-    case 'customer.subscription.created':
-      subscription = event.data.object;
-      status = subscription.status;
-      console.log(`Subscription status is ${status}.`);
-      // Then define and call a method to handle the subscription created.
-      // handleSubscriptionCreated(subscription);
-      break;
-    case 'customer.subscription.updated':
-      subscription = event.data.object;
-      status = subscription.status;
-      console.log(`Subscription status is ${status}.`);
-      // Then define and call a method to handle the subscription update.
-      // handleSubscriptionUpdated(subscription);
-      break;
-    default:
-      // Unexpected event type
-      console.log(`Unhandled event type ${event.type}.`);
-  }
+  stripeWebhookHandler(event);
+
   // Return a 200 response to acknowledge receipt of the event
   response.send();
 });
+
+
+app.get('/billing/success', (req, res) => {
+  res.render('billing/success');
+});
+
+app.get('/billing/cancel', (req,res) => {
+  res.render('billing/cancel');
+});
+
+
+/**********************/
+/** regular routes */
+/**********************/
 
 app.use(express.json());
 
@@ -211,6 +192,24 @@ app.get('/signin', (req,res) => {
   res.render('signin');
 });
 
+/** see https://www.rfc-editor.org/rfc/rfc7519 */
+const login = (req: express.Request, res: express.Response, user: User) => {
+  req.session['loggedIn'] = true;
+  req.session['user'] = user;
+
+  const exp = 1800;
+  const token = generateAccessToken({ 
+    context: {
+      user: user,
+    },
+    iss: 'autoviz-home',
+    sub: user.name.split(' ')[0].toLocaleLowerCase(),
+    aud: ["all"]
+  }, exp);
+
+  res.setHeader('Set-Cookie', [`token=${token}; Max-Age=${exp}; HttpOnly`]);
+}
+
 app.post('/signup', async (req,res) => {
   const { name, email, password, passwordConfirm } = req.body;
 
@@ -226,15 +225,7 @@ app.post('/signup', async (req,res) => {
 
   await sendEmailVerification(user);
 
-  req.session['user'] = user;
-  const token = generateAccessToken({ 
-    user: {
-      email: user.email
-    }
-  });
-
-  res.setHeader('Set-Cookie', [`token=${token}; HttpOnly`]);
-
+  login(req, res, user);
   res.status(201).send();
 });
 
@@ -248,16 +239,7 @@ app.post('/signin', async (req,res) => {
     return res.status(400).send();
   }
 
-  req.session['loggedIn'] = true;
-  req.session['user'] = user;
-
-  const token = generateAccessToken({ 
-    user: {
-      email: user.email
-    }
-  });
-
-  res.setHeader('Set-Cookie', [`token=${token}; HttpOnly`]);
+  login(req,res,user);
   res.status(200).send();
 });
 
@@ -282,9 +264,20 @@ app.get('/verify-email/:verification_key', async (req, res) => {
 });
 
 app.get('/profile', authenticateToken, async (req,res) => {
-  console.log(req.session);
+  if (!req.session['user'])
+    return res.sendStatus(401);
+
+  console.log('jwt payload: ', res.locals.jwtPayload, 'request session: ', req.session);
+
   res.locals.user = req.session['user'];
-  if (!req.session['user']['email_verified']) res.locals.alert = "You need to verify your email";
+  res.locals.logged_in = true;
+
+  if (!req.session['user']['email_verified']) 
+    res.locals.alert = "You need to verify your email";
+
+  //console.log('getting stripe customers!');
+  //await getStripeCustomers();
+  
   res.render('profile');
 });
 

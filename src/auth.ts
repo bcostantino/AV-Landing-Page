@@ -1,8 +1,11 @@
 //const crypto = require('crypto');
 //const mysql  = require('mysql');
 import * as crypto from 'crypto';
-import * as mysql from 'mysql';
+
 import * as nodemailer from 'nodemailer';
+import { dbQuery } from './db';
+import { User } from './models/auth';
+/*import * as mysql from 'mysql';
 const config = {
   host    : 'localhost',
   user    : 'av_business',
@@ -11,7 +14,7 @@ const config = {
 };
 const connection = mysql.createConnection(config);
 
-/** see https://darifnemma.medium.com/how-to-interact-with-mysql-database-using-async-await-promises-in-node-js-9e6c81b683da */
+ see https://darifnemma.medium.com/how-to-interact-with-mysql-database-using-async-await-promises-in-node-js-9e6c81b683da 
 const dbQuery = (query: string, params?: any[]): Promise<any[]> => {
   return new Promise((resolve,reject) => {
     connection.query(query, params, function(err, results) {
@@ -21,11 +24,41 @@ const dbQuery = (query: string, params?: any[]): Promise<any[]> => {
       return resolve(results);
     });
   });
-}
+}*/
 
 const getRandomString = (len = 20) => {
   const pwdChars = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
   return Array(len).fill(pwdChars).map((x) => { return x[Math.floor(Math.random() * x.length)] }).join('');
+}
+
+function generateUUID() { // Public Domain/MIT
+  var d = new Date().getTime();//Timestamp
+  var d2 = ((typeof performance !== 'undefined') && performance.now && (performance.now()*1000)) || 0;//Time in microseconds since page-load or 0 if unsupported
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+      var r = Math.random() * 16;//random number between 0 and 16
+      if(d > 0){//Use timestamp until depleted
+          r = (d + r)%16 | 0;
+          d = Math.floor(d/16);
+      } else {//Use microseconds since page-load if supported
+          r = (d2 + r)%16 | 0;
+          d2 = Math.floor(d2/16);
+      }
+      return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+  });
+}
+
+const convertToSeconds = (timeString: string): number => {
+  let seconds = 0;
+  if (timeString.endsWith('s')) {
+    seconds = parseInt(timeString);
+  } else if (timeString.endsWith('m')) {
+    seconds = parseInt(timeString) * 60;
+  } else if (timeString.endsWith('h')) {
+    seconds = parseInt(timeString) * 60 * 60;
+  } else if (timeString.endsWith('d')) {
+    seconds = parseInt(timeString) * 60 * 60 * 24;
+  }
+  return seconds;
 }
 
 const SALT_LENGTH = 20;
@@ -218,5 +251,10 @@ export {
   setUserEmailVerifiedById,
   sendEmailVerification,
   findActiveUserEmailVerificationByKey,
-  deactivateUserEmailVerificationById
+  deactivateUserEmailVerificationById,
+
+  convertToSeconds,
+
+  getRandomString,
+  generateUUID
 }

@@ -9,3 +9,17 @@ interface User {
 
   emailVerified: boolean;
 }
+
+interface License {
+  id: number;
+  userId: number;
+  licenseId: string;
+  stripeCustomerId: string;
+  stripeSubscriptionId: string;
+  stripeSubscriptionStatus: string;
+  stripeSubscriptionCancelAtPeriodEnd: boolean;
+}
+
+export {
+  User, License
+}

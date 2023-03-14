@@ -68,7 +68,7 @@
                         <h1 id="tier-1-price" class="d-inline display-6 text-black mb-0">0</h1>
                         <span id="tier-1-price-unit" class="align-baseline small">per month forever</span>
                     </div>
-                    <a href="" class="btn btn-dark rounded py-2 px-4 my-3" style="width: 100%;">
+                    <a href="<%- (locals.logged_in) ? '/billing' : '/signup' %>" class="btn btn-dark rounded py-2 px-4 my-3" style="width: 100%;">
                         Create a free workspace
                     </a>
                 </div>
@@ -121,7 +121,7 @@
                         <h1 id="tier-2-price" class="d-inline display-6 text-dark mb-0"> 24</h1>
                         <span id="tier-2-price-unit" class="align-baseline">per user/month</span>
                     </div>
-                    <a href="" class="btn btn-light rounded py-2 px-4 my-3 w-100">Get Started</a>
+                    <a href="<%- (locals.logged_in) ? '/billing' : '/signup' %>" class="btn btn-light rounded py-2 px-4 my-3 w-100">Get Started</a>
                 </div>
                 <div class="bg-light text-dark p-3 small">
                     <div class="mb-2">
@@ -183,7 +183,7 @@
                         <h1 class="d-inline display-6 text-dark mb-0">96</h1>
                         <span class="align-baseline">per user/month</span>
                     </div>
-                    <a href="" class="btn btn-light rounded py-2 px-4 my-3 w-100">
+                    <a href="<%- (locals.logged_in) ? '/billing' : '/signup' %>" class="btn btn-light rounded py-2 px-4 my-3 w-100">
                         Get Started
                     </a>
                 </div>
