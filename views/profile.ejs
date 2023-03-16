@@ -81,12 +81,14 @@
           <!--<h5 class="card-title">Secondary card title</h5>-->
 
           <!-- get started wizard - see https://www.w3schools.com/howto/howto_js_form_steps.asp -->
+          <%- include('./partials/pricing', { active_page: "profile" }); %>
+          
           <form id="regForm" action="">
             <!--<h2>Register your business</h2>-->
             
             <!-- One "tab" for each step in the form: -->
             <div class="tab my-2">
-              <%- include('./partials/pricing', { active_page: "profile" }); %>
+              
               <!--<input type="text" class="form-control my-2" placeholder="First name" id="">
               <input type="text" class="form-control my-2" placeholder="Last name" id="">-->
             </div>

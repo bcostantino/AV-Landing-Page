@@ -121,7 +121,16 @@
                         <h1 id="tier-2-price" class="d-inline display-6 text-dark mb-0"> 24</h1>
                         <span id="tier-2-price-unit" class="align-baseline">per user/month</span>
                     </div>
-                    <a href="<%- (locals.logged_in) ? '/billing' : '/signup' %>" class="btn btn-light rounded py-2 px-4 my-3 w-100">Get Started</a>
+                    <% if (locals.logged_in) { %>
+                        <button class="btn btn-light rounded py-2 px-4 my-3 w-100" 
+                                id="checkout-button-1" 
+                                data-lookup-key="av-standard-monthly"
+                                data-allow-...="http://localhost:4242"
+                                data-allow-...="https://checkout.stripe.com"
+                                >Get Started</button>
+                    <% } else { %>
+                        <a href="/signup" class="btn btn-light rounded py-2 px-4 my-3 w-100">Get Started</a>
+                    <% } %>
                 </div>
                 <div class="bg-light text-dark p-3 small">
                     <div class="mb-2">
@@ -205,6 +214,7 @@
         </div>
     </div>
 </div>
+<script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
 <script>
     const setPricingInfo = (tier, price, unit) => {
         $(`#tier-${tier}-price`).html(price);
@@ -223,6 +233,34 @@
             } else {        // yearly
                 setPricingInfo(1, 0, 'per year forerver');
                 setPricingInfo(2, 260, 'per user/year');
+            }
+        });
+    });
+
+    // Add event listeners to each button
+    document.querySelectorAll('[data-lookup-key]').forEach(button => {
+        console.log('got button: ', button)
+        button.addEventListener('click', async () => {
+            try {
+                // Get the lookup key from the data attribute of the button
+                const lookupKey = button.getAttribute('data-lookup-key');
+
+                // Send a request to create a checkout session with the specified price lookup key
+                const response = await fetch('/billing/create-checkout-session', {
+                    method: 'POST',
+                    headers: {
+                    'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ lookup_key: lookupKey })
+                });
+
+                // Parse the JSON response
+                const session = await response.json();
+
+                // Redirect the user to the checkout session
+                window.location.href = session.url;
+            } catch (error) {
+                console.error('Error creating checkout session:', error);
             }
         });
     });

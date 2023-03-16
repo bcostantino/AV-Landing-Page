@@ -9,9 +9,9 @@ import session from 'express-session';
 import * as path from 'path';
 import * as jwt from 'jsonwebtoken';
 import cookieParser from 'cookie-parser';
-import { dbTest, createUser, findUserByEmail, validateEmail, validateLogin, sendEmailVerification, findActiveUserEmailVerificationByKey, deactivateUserEmailVerificationById, setUserEmailVerifiedById, generateUUID } from './auth';
-import { getStripeCustomers, stripe, stripeWebhookHandler } from './licensing';
-import { User } from './models/auth';
+import { dbTest, createUser, findUserByEmail, validateEmail, validateLogin, sendEmailVerification, findActiveUserEmailVerificationByKey, deactivateUserEmailVerificationById, setUserEmailVerifiedById, generateUUID, toPublicUser, findUserByCustomerId, findUserById } from './auth';
+import { getOrCreateCustomer, getStripeCustomers, stripe, stripeWebhookHandler } from './licensing';
+import { PublicUser, User } from './models/auth';
 
 const app = express();
 
@@ -47,8 +47,6 @@ function authenticateToken(req: express.Request, res: express.Response, next) {
       return res.redirect('/login');
     }
 
-    //req.locals.jwtPayload = payload;
-    //req.session['jwtPayload'] = payload;
     res.locals.jwtPayload = payload;
 
     next();
@@ -64,55 +62,8 @@ app.use(cookieParser());
 const PORT = 4242;
 const DOMAIN = `http://localhost:${PORT}`;
 
-
 /*   BILLING ROUTES    */
-app.get('/billing', authenticateToken, (req, res) => {
-  res.render('billing/checkout');
-});
-
-app.post('/billing/create-checkout-session', authenticateToken, async (req, res) => {
-  const user = req.session['jwtPayload'];
-  const prices = await stripe.prices.list({
-    lookup_keys: [req.body.lookup_key],
-    expand: ['data.product'],
-  });
-  const session = await stripe.checkout.sessions.create({
-    billing_address_collection: 'auto',
-    line_items: [
-      {
-        price: prices.data[0].id,
-        // For metered billing, do not pass quantity
-        quantity: 1,
-      },
-    ],
-    mode: 'subscription',
-    client_reference_id: user,
-    success_url: `${DOMAIN}/billing/success?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${DOMAIN}/billing/cancel`,
-  });
-
-  res.redirect(303, session.url);
-});
-
-app.post('/billing/create-portal-session', authenticateToken, async (req, res) => {
-  // For demonstration purposes, we're using the Checkout session to retrieve the customer ID.
-  // Typically this is stored alongside the authenticated user in your database.
-  const { session_id } = req.body;
-  const checkoutSession = await stripe.checkout.sessions.retrieve(session_id);
-
-  // This is the url to which the customer will be redirected when they are done
-  // managing their billing with the portal.
-  const returnUrl = `${DOMAIN}`;
-
-  const portalSession = await stripe.billingPortal.sessions.create({
-    customer: checkoutSession.customer,
-    return_url: returnUrl,
-  });
-
-  res.redirect(303, portalSession.url);
-});
-
-app.post('/billing/webhook', express.raw({ type: "*/*" }), (request, response) => {
+app.post('/billing/webhook', express.raw({ type: "*/*" }), async (request, response) => {
   //console.log('idk what happens in the webhook');
   let event = request.body;
   // Replace this endpoint secret with your endpoint's unique secret
@@ -133,16 +84,74 @@ app.post('/billing/webhook', express.raw({ type: "*/*" }), (request, response) =
         endpointSecret
       );
     } catch (err) {
-      console.log(`⚠️  Webhook signature verification failed.`, err.message);
+      console.error(`${new Date().toLocaleString()} [⚠️]: Webhook signature verification failed.`, err.message);
       return response.sendStatus(400);
     }
   }
 
   // Handle the event
-  stripeWebhookHandler(event);
+  await stripeWebhookHandler(event);
 
   // Return a 200 response to acknowledge receipt of the event
   response.send();
+});
+
+app.use(express.json());
+
+app.get('/billing', authenticateToken, (req, res) => {
+  res.render('billing/checkout');
+});
+
+app.post('/billing/create-checkout-session', authenticateToken, async (req, res) => {
+  const lookupKey = req.body.lookup_key;
+  if (!lookupKey)
+    return res.sendStatus(400);
+
+  const user = await findUserById((res.locals.jwtPayload.context.user as User).id);
+  console.log(user);
+  if (!user.emailVerified)
+    return res.sendStatus(401);
+
+  console.log('retrieved user from jwt: ', user);
+
+  const customerId = await getOrCreateCustomer(user.id.toString(), user.email);
+  const prices = await stripe.prices.list({ lookup_keys: [lookupKey], expand: ['data.product'], });
+  if (prices.data.length === 0)
+    return res.sendStatus(404);
+  
+  const session = await stripe.checkout.sessions.create({
+    billing_address_collection: 'auto',
+    line_items: [
+      {
+        price: prices.data[0].id,
+        quantity: 1, // For metered billing, do not pass quantity
+      },
+    ],
+    mode: 'subscription',
+    success_url: `${DOMAIN}/billing/success?session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${DOMAIN}/billing/cancel`,
+    customer: customerId
+  });
+
+  res.json({ url: session.url }); //res.redirect(303, session.url);
+});
+
+app.post('/billing/create-portal-session', authenticateToken, async (req, res) => {
+  // For demonstration purposes, we're using the Checkout session to retrieve the customer ID.
+  // Typically this is stored alongside the authenticated user in your database.
+  const { session_id } = req.body;
+  const checkoutSession = await stripe.checkout.sessions.retrieve(session_id);
+
+  // This is the url to which the customer will be redirected when they are done
+  // managing their billing with the portal.
+  const returnUrl = `${DOMAIN}`;
+
+  const portalSession = await stripe.billingPortal.sessions.create({
+    customer: checkoutSession.customer as string,
+    return_url: returnUrl,
+  });
+
+  res.redirect(303, portalSession.url);
 });
 
 
@@ -159,8 +168,9 @@ app.get('/billing/cancel', (req,res) => {
 /** regular routes */
 /**********************/
 
-app.use(express.json());
 
+
+/** public routes */
 
 app.get('/', (req,res) => {
   res.render('index');
@@ -192,15 +202,23 @@ app.get('/signin', (req,res) => {
   res.render('signin');
 });
 
+
+
+
 /** see https://www.rfc-editor.org/rfc/rfc7519 */
-const login = (req: express.Request, res: express.Response, user: User) => {
+const login = async (req: express.Request, res: express.Response, user: User) => {
   req.session['loggedIn'] = true;
   req.session['user'] = user;
 
   const exp = 1800;
   const token = generateAccessToken({ 
     context: {
-      user: user,
+      user: {
+        id: user.id,
+        name: user.name,
+        username: user.username,
+        email: user.email
+      }, //await toPublicUser(user),
     },
     iss: 'autoviz-home',
     sub: user.name.split(' ')[0].toLocaleLowerCase(),
@@ -213,7 +231,7 @@ const login = (req: express.Request, res: express.Response, user: User) => {
 app.post('/signup', async (req,res) => {
   const { name, email, password, passwordConfirm } = req.body;
 
-  if (!name || !email || !password) return res.sendStatus(400);
+  if (!(name && email && password)) return res.sendStatus(400);
   if (password !== passwordConfirm) return res.sendStatus(400);
   if (!validateEmail(email)) return res.sendStatus(400);
 
@@ -224,8 +242,8 @@ app.post('/signup', async (req,res) => {
   console.log('created user: ', user);
 
   await sendEmailVerification(user);
+  await login(req, res, user);
 
-  login(req, res, user);
   res.status(201).send();
 });
 
@@ -239,7 +257,8 @@ app.post('/signin', async (req,res) => {
     return res.status(400).send();
   }
 
-  login(req,res,user);
+  await login(req,res,user);
+  
   res.status(200).send();
 });
 

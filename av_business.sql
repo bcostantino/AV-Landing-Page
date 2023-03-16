@@ -6,7 +6,7 @@ CREATE TABLE autoviz_business.users (
   email               varchar(255)    UNIQUE NOT NULL,
   password            varchar(1000)   NOT NULL,
 
-  email_verified      BOOLEAN         NOT NULL DEFAULT FALSE
+  email_verified      BOOLEAN         NOT NULL DEFAULT FALSE,
 
   stripe_customer_id  varchar(255),
 
@@ -28,10 +28,12 @@ CREATE TABLE autoviz_business.user_licenses (
   id                                        MEDIUMINT       NOT NULL AUTO_INCREMENT,
   user_id                                   MEDIUMINT       NOT NULL,
 
-  license_id                                varchar(255)    NOT NULL,
+  license_id                                MEDIUMINT       NOT NULL,
   stripe_subscription_id                    varchar(255)    NOT NULL,
+  stripe_subscription_plan_id               varchar(255)    NOT NULL,
   stripe_subscription_status                varchar(255)    NOT NULL,
   stripe_subscription_cancel_at_period_end  BOOLEAN         NOT NULL,
+  stripe_subscription_current_period_end    DATETIME        NOT NULL, 
 
   PRIMARY KEY (id)
 );

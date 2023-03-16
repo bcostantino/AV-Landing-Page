@@ -1,10 +1,12 @@
 //const crypto = require('crypto');
 //const mysql  = require('mysql');
 import * as crypto from 'crypto';
+import * as encryption from './crypto';
 
 import * as nodemailer from 'nodemailer';
 import { dbQuery } from './db';
-import { User } from './models/auth';
+import { PublicUser, User } from './models/auth';
+import { findLicenseByUserId, toPublicLicense } from './licensing';
 /*import * as mysql from 'mysql';
 const config = {
   host    : 'localhost',
@@ -61,6 +63,25 @@ const convertToSeconds = (timeString: string): number => {
   return seconds;
 }
 
+const EMAIL_BLACKLIST = ["*@gmail.com", "example@blacklist.com", "test@spammy.net"];
+
+function isEmailBlacklisted(email: string): boolean {
+  const domain = email.split("@")[1];
+  return EMAIL_BLACKLIST.some(blacklistedDomain =>
+    blacklistedDomain.includes("*")
+      ? domain.endsWith(blacklistedDomain.split("@")[1].replace("*", ""))
+      : domain === blacklistedDomain.split("@")[1]
+  );
+}
+
+/*
+const email1 = "user1@gmail.com";
+const email2 = "user2@spammy.net";
+
+console.log(isEmailBlacklisted(email1)); // true
+console.log(isEmailBlacklisted(email2)); // true
+*/
+
 const SALT_LENGTH = 20;
 
 const _hash_sha512 = (text) => {
@@ -99,7 +120,19 @@ const userFromDbResult = (result: any) => {
     name: result['name'],
     email: result['email'],
     password: result['password'],
-    emailVerified: result['email_verified']
+    stripeCustomerId: result['stripe_customer_id'],
+    emailVerified: !(!result['email_verified']),
+  };
+}
+
+const toPublicUser = async (user: User): Promise<PublicUser> => {
+  return <PublicUser> {
+    id: encryption.encrypt(user.id.toString()),
+    name: user.name,
+    email: user.email,
+    stripeCustomerId: encryption.encrypt(user.stripeCustomerId),
+    emailVerified: user.emailVerified,
+    license: toPublicLicense(await findLicenseByUserId(user.id))
   };
 }
 
@@ -110,6 +143,11 @@ const findUserById = async (id) => {
 
 const findUserByEmail = async (email) => {
   const results = await dbQuery('SELECT * FROM users WHERE email = ?', [email]);
+  return (results.length) ? userFromDbResult(results[0]) : null;
+}
+
+const findUserByCustomerId = async (customerId: string) => {
+  const results = await dbQuery('SELECT * FROM users WHERE stripe_customer_id = ?', [customerId]);
   return (results.length) ? userFromDbResult(results[0]) : null;
 }
 
@@ -128,6 +166,10 @@ const createUser = async (name: string, email: string, password: string) => {
 
 const setUserEmailVerifiedById = async (id: number) => {
   const results = await dbQuery('UPDATE users SET email_verified = TRUE WHERE id', [id]);
+}
+
+const setUserCustomerIdById = async (id: number, customerId: string) => {
+  const results = await dbQuery("UPDATE users SET stripe_customer_id = ? WHERE id = ?", [customerId, id]);
 }
 
 const findUserEmailVerificationById = async (id: number) => {
@@ -243,12 +285,16 @@ const sendEmailVerification = async (user: object) => {
   validateLogin
 }*/
 export {
+  toPublicUser,
   dbTest,
   createUser,
+  findUserById,
   findUserByEmail,
+  findUserByCustomerId,
   validateEmail,
   validateLogin,
   setUserEmailVerifiedById,
+  setUserCustomerIdById,
   sendEmailVerification,
   findActiveUserEmailVerificationByKey,
   deactivateUserEmailVerificationById,
