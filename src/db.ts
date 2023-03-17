@@ -21,5 +21,6 @@ const dbQuery = (query: string, params?: any[]): Promise<any[]> => {
 }
 
 export {
+  config as MySQLConnectionConfig,
   dbQuery
 }

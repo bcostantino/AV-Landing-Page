@@ -1,4 +1,4 @@
-import { findUserByCustomerId, getRandomString, setUserCustomerIdById } from './auth';
+import { camelToUnderscore, findUserByCustomerId, getRandomString, setUserCustomerIdById, updateUserById } from './auth';
 import { dbQuery } from './db';
 import { User, License, PublicLicense } from './models/auth';
 import * as encryption from './crypto';
@@ -9,9 +9,6 @@ const stripe = new Stripe(process.env.STRIPE_API_KEY, {
 });
 const STRIPE_API_BASE_URL = 'https://api.stripe.com';
 
-enum PRODUCTS {
-  STANDARD = 'prod_NX6MaWnCdRDiJV'
-}
 
 const licenseFromDbResult = (result: any) => {
   return <License> {
@@ -22,7 +19,10 @@ const licenseFromDbResult = (result: any) => {
     stripeSubscriptionPlanId: result['stripe_subscription_plan_id'],
     stripeSubscriptionStatus: result['stripe_subscription_status'],
     stripeSubscriptionCancelAtPeriodEnd: !(!result['stripe_subscription_cancel_at_period_end']),
-    stripeSubscriptionCurrentPeriodEnd: result['stripe_subscription_current_period_end']
+    stripeSubscriptionCurrentPeriodEnd: result['stripe_subscription_current_period_end'],
+    active: !(!result['active']),
+    createdAt: result['created_at'],
+    updatedAt: result['updated_at']
   };
 }
 
@@ -59,6 +59,8 @@ const createLicense = async (
   return (await findLicenseById(results['insertId']));
 }
 
+
+
 interface LicenseUpdate {
   licenseId?: number;
   stripeSubscriptionId?: string;
@@ -71,15 +73,16 @@ interface LicenseUpdate {
 async function updateLicenseById(
   id: number,
   userLicenseUpdate: LicenseUpdate
-): Promise<void> {
-  const query = `UPDATE autoviz_business.user_licenses SET ${
-                Object.entries(userLicenseUpdate).filter(([key]) => key !== 'userId' && userLicenseUpdate[key] !== undefined).map(([key]) => `${key} = ?`).join(',')
+): Promise<License> {
+  const query = `UPDATE user_licenses SET ${
+                Object.entries(userLicenseUpdate).filter(([key]) => key !== 'userId' && userLicenseUpdate[key] !== undefined).map(([key]) => `${camelToUnderscore(key)} = ?`).join(',')
               } WHERE id = ?;`;
 
   const params = Object.values(userLicenseUpdate).filter((value) => value !== undefined);
   params.push(id);
 
-  await dbQuery(query, params);
+  const results = await dbQuery(query, params);
+  return (await findLicenseById(id));
 }
 
 
@@ -91,7 +94,6 @@ const getStripeCustomers = async () => {
 }
 
 async function getOrCreateCustomer(userId: string, email: string): Promise<string> {
-  console.log('checking if customer exists');
   const customers = await stripe.customers.list({
     email,
     limit: 1
@@ -100,13 +102,10 @@ async function getOrCreateCustomer(userId: string, email: string): Promise<strin
   let customer = customers.data.find(e => e.metadata.userId === userId);
 
   if (customer) {
-    console.log('found customer: ', customer);
     // return the ID of the existing customer
     return customer.id;
   }
 
-
-  console.log('creating new customer');
   // create a new customer with the specified email and metadata
   customer = await stripe.customers.create({
     email,
@@ -115,6 +114,7 @@ async function getOrCreateCustomer(userId: string, email: string): Promise<strin
     },
   });
   await setUserCustomerIdById(parseInt(userId), customer.id);
+
   // return the ID of the newly created customer
   return customer.id; 
 }
@@ -131,6 +131,21 @@ async function getProductFromPlanId(planId: string): Promise<Stripe.Product | nu
   }
 }
 
+const createFreeLicense = async (user: User): Promise<License> => {
+  const license = await createLicense(
+    user.id,
+    0,
+    null,
+    null,
+    null,
+    null,
+    null
+  );
+  
+  console.debug(`Created user license: `, license);
+  return license;
+}
+
 interface ExtendedSubscription extends Stripe.Subscription {
   plan: Stripe.Plan;
 }
@@ -138,10 +153,18 @@ interface ExtendedSubscription extends Stripe.Subscription {
 
 const stripeWebhookHandler = async (event) => {
   let subscription = event.data.object as ExtendedSubscription,
-      status = subscription.status;
+      status = subscription.status,
+      license: License = null;
   //console.log(`Stripe webhook invoked with event: ${event.type}`);
   let handled = true;
   switch (event.type) {
+    case 'customer.deleted':
+      const customer = event.data.object as Stripe.Customer;
+      const _user = await findUserByCustomerId(customer.id);
+      await updateUserById(_user.id, {
+        stripeCustomerId: ''
+      });
+      break;
     /*case 'customer.created':
       let customer = event.data.object;
       const userId = parseInt(customer.metadata.userId);
@@ -162,12 +185,10 @@ const stripeWebhookHandler = async (event) => {
       // handleSubscriptionDeleted(subscriptionDeleted);
       break;
     case 'customer.subscription.created':
-      //subscription = event.data.object;
-      //status = subscription.status;
       const customerId = subscription.customer as string;
       const user = await findUserByCustomerId(customerId);
       const product = await getProductFromPlanId(subscription.plan.id);
-      const license = await createLicense(
+      license = await createLicense(
         user.id,
         parseInt(product.metadata['licenseId']),
         subscription.id,
@@ -184,16 +205,28 @@ const stripeWebhookHandler = async (event) => {
         },
       });
       
-      console.log(`Created user license: `, license, subscription);
-      // Then define and call a method to handle the subscription created.
-      // handleSubscriptionCreated(subscription);
+      console.debug(`Created user license: `, license);
       break;
     case 'customer.subscription.updated':
-      //subscription = event.data.object;
-      //status = subscription.status;
-      //console.log(`Subscription status is ${status}. subscription: `, subscription);
-      // Then define and call a method to handle the subscription update.
-      // handleSubscriptionUpdated(subscription);
+      try {
+        const licenseId = parseInt(subscription.metadata.licenseId);
+        if (Number.isNaN(licenseId))
+          throw new Error(`License id not attached to subscription metadata: ${JSON.stringify(subscription)}`);
+
+        license = await findLicenseById(licenseId);
+        if (!license)
+          throw new Error(`License not found for subscription: ${JSON.stringify(subscription)}`)
+
+        license = await updateLicenseById(licenseId, {
+          stripeSubscriptionStatus: subscription.status,
+          stripeSubscriptionCancelAtPeriodEnd: subscription.cancel_at_period_end,
+          stripeSubscriptionCurrentPeriodEnd: new Date(subscription.current_period_end * 1000)
+        });
+        console.debug(`Updated user license: `, license);
+      } catch (error) {
+        console.error(`Caught error in 'customer.subscription.updated' webhook: `, error);
+      }
+
       break;
     default:
       // Unexpected event type
@@ -209,6 +242,7 @@ export {
   findLicenseById,
   findLicenseByUserId,
   createLicense,
+  createFreeLicense,
   getStripeCustomers,
   getOrCreateCustomer,
   

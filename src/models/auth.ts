@@ -10,6 +10,20 @@ interface User {
   stripeCustomerId: string;
 
   emailVerified: boolean;
+
+  active: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+interface UserUpdate {
+  name?: string;
+  username?: string;
+  email?: string;
+  password?: string;
+  stripeCustomerId?: string;
+  emailVerified?: boolean;
+  active?: boolean;
 }
 
 interface PublicUser {
@@ -26,11 +40,15 @@ interface License {
   id: number;
   userId: number;
   licenseId: string;
-  stripeSubscriptionId: string;
-  stripeSubscriptionPlanId: string;
-  stripeSubscriptionStatus: string;
-  stripeSubscriptionCancelAtPeriodEnd: boolean;
-  stripeSubscriptionCurrentPeriodEnd: Date;
+  stripeSubscriptionId?: string;
+  stripeSubscriptionPlanId?: string;
+  stripeSubscriptionStatus?: string;
+  stripeSubscriptionCancelAtPeriodEnd?: boolean;
+  stripeSubscriptionCurrentPeriodEnd?: Date;
+
+  active: boolean;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 interface PublicLicense {
@@ -41,6 +59,7 @@ interface PublicLicense {
 
 export {
   User,
+  UserUpdate,
   License,
   PublicUser,
   PublicLicense

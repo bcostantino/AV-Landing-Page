@@ -5,8 +5,9 @@ import * as encryption from './crypto';
 
 import * as nodemailer from 'nodemailer';
 import { dbQuery } from './db';
-import { PublicUser, User } from './models/auth';
+import { PublicUser, User, UserUpdate } from './models/auth';
 import { findLicenseByUserId, toPublicLicense } from './licensing';
+import SMTPTransport from 'nodemailer/lib/smtp-transport';
 /*import * as mysql from 'mysql';
 const config = {
   host    : 'localhost',
@@ -74,6 +75,8 @@ function isEmailBlacklisted(email: string): boolean {
   );
 }
 
+const camelToUnderscore = (str: string) => str.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
+
 /*
 const email1 = "user1@gmail.com";
 const email2 = "user2@spammy.net";
@@ -122,6 +125,9 @@ const userFromDbResult = (result: any) => {
     password: result['password'],
     stripeCustomerId: result['stripe_customer_id'],
     emailVerified: !(!result['email_verified']),
+    active: !(!result['active']),
+    createdAt: result['created_at'],
+    updatedAt: result['updated_at']
   };
 }
 
@@ -170,6 +176,23 @@ const setUserEmailVerifiedById = async (id: number) => {
 
 const setUserCustomerIdById = async (id: number, customerId: string) => {
   const results = await dbQuery("UPDATE users SET stripe_customer_id = ? WHERE id = ?", [customerId, id]);
+}
+
+
+
+async function updateUserById(
+  id: number,
+  userUpdate: UserUpdate
+): Promise<User> {
+  const query = `UPDATE users SET ${
+                Object.entries(userUpdate).filter(([key]) => userUpdate[key] !== undefined).map(([key]) => `${camelToUnderscore(key)} = ?`).join(',')
+              } WHERE id = ?;`;
+
+  const params = Object.values(userUpdate).filter((value) => value !== undefined);
+  params.push(id);
+
+  const results = await dbQuery(query, params);
+  return (await findUserById(id));
 }
 
 const findUserEmailVerificationById = async (id: number) => {
@@ -229,50 +252,80 @@ const addMinutes = (date: Date, minutes: number) => {
   return new Date(date.getTime() + minutes*60000);
 }
 
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST,
+  port: parseInt(process.env.SMTP_PORT),
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASSWORD
+  }
+});
 
+const sendEmail = async (recipientEmail: string, bodyContent: string, fromEmail = 'noreply@autoviz.net') => {
 
-const sendEmailVerification = async (user: object) => {
-  const verification = await createUserEmailVerification(user['id'], addMinutes(new Date(), 15));
-  console.log('insert email verification: ', verification);
-  const verificationUrl = `http://127.0.0.1:4242/verify-email/${verification['_key']}`;
-
-  var transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST, //"live.smtp.mailtrap.io",
-    port: parseInt(process.env.SMTP_PORT), //587,
-    auth: {
-      user: process.env.SMTP_USER, //'api',
-      pass: process.env.SMTP_PASSWORD //'04d8901bbd373b55066a415dfda99302'
-    }
-  });
   const mailOptions = {
-    from: 'noreply@autoviz.net',
-    to: user['email'],
+    from: fromEmail, //'noreply@autoviz.net',
+    to: recipientEmail, //user['email'],
     subject: 'Please verify your email address',
-    html: `
-<!DOCTYPE html>
-<html>
-  <head>
-  <meta charset="utf-8">
-    <title></title>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-  </head>
-  <body>
-    To secure your AutoViz account, we just need to verify your email address: ${user['email']}. <a href="${verificationUrl}">Verify email address</a>
-  </body>
-</hmtl>
-    `
+    html: bodyContent
   
   };
 
-  transporter.sendMail(mailOptions, function(error, info) {
-    if (error) {
-      console.log(error);
-    } else {
-      console.log('Email sent: ' + info.response);
-    }
+  return new Promise<SMTPTransport.SentMessageInfo>((resolve, reject) => {
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve(info);
+      }
+    });
   });
+
+}
+
+
+
+const sendEmailVerification = async (user: User) => {
+  const existingVerification = await findUserEmailVerificationById(user.id);
+  if (existingVerification)
+    await deactivateUserEmailVerificationById(existingVerification['id']);
+  const verification = await createUserEmailVerification(user.id, addMinutes(new Date(), 15));
+  //console.log('insert email verification: ', verification);
+  const verificationUrl = `http://127.0.0.1:4242/verify-email/${verification['_key']}`;
+
+  const info = await sendEmail(user['email'], `
+    <!DOCTYPE html>
+    <html>
+      <head>
+      <meta charset="utf-8">
+        <title></title>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+      </head>
+      <body>
+        To secure your AutoViz account, we just need to verify your email address: ${user.email}. <a href="${verificationUrl}">Verify email address</a>
+      </body>
+    </hmtl>
+  `);
+  console.log('Email sent: ' + info.response);
+}
+
+const verifyEmail = async (key: string): Promise<string> => {
+  const verification = await findActiveUserEmailVerificationByKey(key);
+
+  if (!verification)
+    return 'inactive'; // res.status(410).send('Verification link inactive');
+  
+  if (new Date() > verification['expires_at']) {
+    await deactivateUserEmailVerificationById(verification['id']);
+    return 'expired'; // res.status(498).send('Verification link expired');
+  }
+
+  await setUserEmailVerifiedById(verification['user_id']);
+  await deactivateUserEmailVerificationById(verification['id']);
+  console.log(key, verification);
+  return 'success';
 }
 
 
@@ -288,6 +341,7 @@ export {
   toPublicUser,
   dbTest,
   createUser,
+  updateUserById,
   findUserById,
   findUserByEmail,
   findUserByCustomerId,
@@ -295,11 +349,15 @@ export {
   validateLogin,
   setUserEmailVerifiedById,
   setUserCustomerIdById,
+
   sendEmailVerification,
+  verifyEmail,
+
   findActiveUserEmailVerificationByKey,
   deactivateUserEmailVerificationById,
 
   convertToSeconds,
+  camelToUnderscore,
 
   getRandomString,
   generateUUID

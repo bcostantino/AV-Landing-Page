@@ -254,7 +254,7 @@ app.post('/signin', async (req,res) => {
   res.status(200).send();
 });
 
-app.get('/profile', authenticateToken, async (req,res) => {
+app.get('/portal', authenticateToken, async (req,res) => {
   console.log(req.session);
   if (!req.session.user['email_verified']) res.locals.alert = "You need to verify your email";
   res.render('profile');

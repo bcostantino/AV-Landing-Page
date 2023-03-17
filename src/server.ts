@@ -9,11 +9,14 @@ import session from 'express-session';
 import * as path from 'path';
 import * as jwt from 'jsonwebtoken';
 import cookieParser from 'cookie-parser';
-import { dbTest, createUser, findUserByEmail, validateEmail, validateLogin, sendEmailVerification, findActiveUserEmailVerificationByKey, deactivateUserEmailVerificationById, setUserEmailVerifiedById, generateUUID, toPublicUser, findUserByCustomerId, findUserById } from './auth';
-import { getOrCreateCustomer, getStripeCustomers, stripe, stripeWebhookHandler } from './licensing';
+import { dbTest, createUser, findUserByEmail, validateEmail, validateLogin, sendEmailVerification, findActiveUserEmailVerificationByKey, deactivateUserEmailVerificationById, setUserEmailVerifiedById, generateUUID, toPublicUser, findUserByCustomerId, findUserById, verifyEmail } from './auth';
+import { createFreeLicense, findLicenseByUserId, getOrCreateCustomer, getStripeCustomers, stripe, stripeWebhookHandler } from './licensing';
 import { PublicUser, User } from './models/auth';
+import * as encryption from './crypto';
+import { MySQLConnectionConfig } from './db';
 
 const app = express();
+const MySQLStore = require('express-mysql-session')(session);
 
 /**
  * 
@@ -56,11 +59,21 @@ function authenticateToken(req: express.Request, res: express.Response, next) {
 app.set('view engine', 'ejs');
 app.use('/static', express.static(path.join(path.resolve(__dirname, '..'), 'static')));
 app.use(express.urlencoded({ extended: true }));
-app.use(session({ secret: 'randomstuffhere', resave: true, saveUninitialized: true }));
+app.use(session({ 
+  secret: 'randomstuffhere', 
+  resave: true, 
+  saveUninitialized: true,
+  store: new MySQLStore({
+    ...MySQLConnectionConfig,
+    clearExpired: true,
+    checkExpirationInterval: 900000, // 15 minutes
+    expiration: 86400000, // 1 day
+  })
+}));
 app.use(cookieParser());
 
-const PORT = 4242;
-const DOMAIN = `http://localhost:${PORT}`;
+//const PORT = 4242;
+const DOMAIN = `http://${process.env.HOST}:${process.env.PORT}`;
 
 /*   BILLING ROUTES    */
 app.post('/billing/webhook', express.raw({ type: "*/*" }), async (request, response) => {
@@ -103,21 +116,25 @@ app.get('/billing', authenticateToken, (req, res) => {
 });
 
 app.post('/billing/create-checkout-session', authenticateToken, async (req, res) => {
-  const lookupKey = req.body.lookup_key;
+  const lookupKey = req.body.lookup_key as string;
   if (!lookupKey)
     return res.sendStatus(400);
 
   const user = await findUserById((res.locals.jwtPayload.context.user as User).id);
-  console.log(user);
+  if (!user) return res.sendStatus(401);
+  //console.log(user);
   if (!user.emailVerified)
     return res.sendStatus(401);
 
-  console.log('retrieved user from jwt: ', user);
+  if (lookupKey === 'av-free') {
+    const license = await createFreeLicense(user);
+    return res.sendStatus(201);
+  }
+
+  //console.log('retrieved user from jwt: ', user);
 
   const customerId = await getOrCreateCustomer(user.id.toString(), user.email);
   const prices = await stripe.prices.list({ lookup_keys: [lookupKey], expand: ['data.product'], });
-  if (prices.data.length === 0)
-    return res.sendStatus(404);
   
   const session = await stripe.checkout.sessions.create({
     billing_address_collection: 'auto',
@@ -128,30 +145,35 @@ app.post('/billing/create-checkout-session', authenticateToken, async (req, res)
       },
     ],
     mode: 'subscription',
-    success_url: `${DOMAIN}/billing/success?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${DOMAIN}/billing/cancel`,
-    customer: customerId
+    success_url: `${DOMAIN}/portal?billing=success&session_id={CHECKOUT_SESSION_ID}`,//`${DOMAIN}/billing/success?session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${DOMAIN}/portal?billing=cancel`, //`${DOMAIN}/billing/cancel`,
+    customer: customerId,
   });
 
-  res.json({ url: session.url }); //res.redirect(303, session.url);
+  res.status(303).json({ url: session.url }); //res.redirect(303, session.url);
 });
 
 app.post('/billing/create-portal-session', authenticateToken, async (req, res) => {
   // For demonstration purposes, we're using the Checkout session to retrieve the customer ID.
   // Typically this is stored alongside the authenticated user in your database.
-  const { session_id } = req.body;
-  const checkoutSession = await stripe.checkout.sessions.retrieve(session_id);
+  const { session_id, customer_id } = req.body;
+  if (!(session_id || customer_id))
+    return res.sendStatus(400);
+  
+  const customer = ((session_id) ? (await stripe.checkout.sessions.retrieve(session_id)).customer : customer_id) as string;
+  if (!customer)
+    return res.sendStatus(404);
 
   // This is the url to which the customer will be redirected when they are done
   // managing their billing with the portal.
-  const returnUrl = `${DOMAIN}`;
+  //const returnUrl = ;
 
   const portalSession = await stripe.billingPortal.sessions.create({
-    customer: checkoutSession.customer as string,
-    return_url: returnUrl,
+    customer: customer, //checkoutSession.customer as string,
+    return_url: `${DOMAIN}/portal` //returnUrl,
   });
 
-  res.redirect(303, portalSession.url);
+  res.json({ url: portalSession.url }); //res.redirect(303, portalSession.url);
 });
 
 
@@ -228,6 +250,12 @@ const login = async (req: express.Request, res: express.Response, user: User) =>
   res.setHeader('Set-Cookie', [`token=${token}; Max-Age=${exp}; HttpOnly`]);
 }
 
+const logout = async (req: express.Request, res: express.Response) => {
+  req.session['loggedIn'] = false;
+  req.session['user'] = null;
+  res.setHeader('Set-Cookie', [`token=`]);
+}
+
 app.post('/signup', async (req,res) => {
   const { name, email, password, passwordConfirm } = req.body;
 
@@ -262,42 +290,63 @@ app.post('/signin', async (req,res) => {
   res.status(200).send();
 });
 
+app.get('/signout', async (req, res) => {
+  await logout(req, res);
+  res.redirect('/');
+});
+
+app.get('/resend-email-verification', authenticateToken, async (req, res) => {
+  const user = await findUserById((res.locals.jwtPayload.context.user as User).id);
+  //console.log(user);
+  if (user.emailVerified)
+    return res.sendStatus(403);
+
+  await sendEmailVerification(user);
+  res.send();  
+});
+
 app.get('/verify-email/:verification_key', async (req, res) => {
   const verificationKey = req.params['verification_key'];
-  const verification = await findActiveUserEmailVerificationByKey(verificationKey);
+  const status = await verifyEmail(verificationKey);
 
-  if (!verification)
+  if (status === 'inactive')
     return res.status(410).send('Verification link inactive');
-  
-  if (new Date() > verification['expires_at']) {
-    await deactivateUserEmailVerificationById(verification['id']);
+
+  if (status === 'expired')
     return res.status(498).send('Verification link expired');
-  }
 
-  await setUserEmailVerifiedById(verification['user_id']);
-  await deactivateUserEmailVerificationById(verification['id']);
-
-  console.log(verificationKey, verification);
-
-  res.redirect('/signin');
+  res.redirect('/signin');  
 });
 
-app.get('/profile', authenticateToken, async (req,res) => {
+/* verify user information to access profile */
+const hardAuthorize = async (req: express.Request, res: express.Response, next) => {
   if (!req.session['user'])
-    return res.sendStatus(401);
+    return res.redirect('/signin'); //return res.sendStatus(401);
 
-  console.log('jwt payload: ', res.locals.jwtPayload, 'request session: ', req.session);
+  console.debug('hardAuthorize: request session data: ', req.session);
 
-  res.locals.user = req.session['user'];
+  const user = await findUserById((res.locals.jwtPayload.context.user as User).id);
+  const license = await findLicenseByUserId(user.id);
+
+  //console.log('jwt payload: ', res.locals.jwtPayload, 'request session: ', req.session);
+
+  res.locals.user = {
+    id: encryption.encrypt(user.id.toString()),
+    name: user.name,
+    email: user.email,
+    emailVerified: user.emailVerified,
+    stripeCustomerId: user.stripeCustomerId,
+    license: license
+  }
   res.locals.logged_in = true;
 
-  if (!req.session['user']['email_verified']) 
-    res.locals.alert = "You need to verify your email";
+  console.log(res.locals);
 
-  //console.log('getting stripe customers!');
-  //await getStripeCustomers();
-  
-  res.render('profile');
+  next();
+};
+
+app.get('/portal', authenticateToken, hardAuthorize, async (req,res) => {
+  res.render('portal');
 });
 
-app.listen(PORT, () => console.log('Running on port 4242'));
+app.listen(process.env.PORT, () => console.log('Running on port 4242'));

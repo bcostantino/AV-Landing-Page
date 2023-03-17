@@ -5,7 +5,7 @@
     <%- include('./partials/head'); %>
     <link rel="preconnect" href="https://www.google.com">
     <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
-    <script src="https://www.google.com/recaptcha/api.js?render=explicit"></script>
+    <script src="https://www.google.com/recaptcha/api.js?render=explicit" async></script>
     <link href="/static/css/style.css" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/signup_style.css">
   </head>
@@ -14,6 +14,12 @@
 
     <div id="registration-container" class="wrapper">
       <h2>Sign In</h2>
+
+      <div class="alert alert-dismissible alert-primary bg-light text-dark px-3 py-2 my-2" style="display: none;">
+        <button type="button" class="btn-close" data-bs-dismiss="alert" style="padding: 0; margin: 2.1rem 2rem;"></button>
+        <span id="alert-message" class="small">Text goes here!</span>
+      </div>
+      
       <form id="sign-in-form" action="/signin">
         <div class="input-box">
           <input id="email" class="text-input" type="text" placeholder="Enter your email" required>
@@ -54,6 +60,37 @@
       //console.log('update submit enable ', v);
     }
 
+    let grecaptchaShown = false;
+
+    function showGrepatcha() {
+      if (grecaptchaShown) return;
+
+      try {
+        grecaptcha.ready(function(){
+        console.log('grecaptcha: ', grecaptcha);
+        grecaptcha.render("recaptcha", {
+          sitekey: "6LeC9OkkAAAAAAIVaphcEmTntM70qVDHhRTf9zCS",
+          callback: updateSubmitEnabled
+        });
+        grecaptchaShown = true;
+      });
+      } catch (error) {
+        console.log('failed to show grepatcha, will retry');
+      }
+    }
+
+    function showAlert(text = '') {
+
+      // Get the div element by class name
+      const alertDiv = document.querySelector('.alert');
+
+      // Set the new text content
+      document.querySelector('#alert-message').innerHTML = `<strong>Oh snap!</strong> ${(text) ? text : '<a href="#" class="alert-link">Change a few things up</a> and try submitting again.'}.`;
+
+      // Show the div element
+      alertDiv.style.display = 'block';
+    }
+
     $(document).ready(function() {
 
       $('input#email').change(updateSubmitEnabled);
@@ -83,13 +120,16 @@
       }
 
       // If reCAPTCHA is still loading, grecaptcha will be undefined.
-      grecaptcha.ready(function(){
-        console.log('grecaptcha: ', grecaptcha);
-        grecaptcha.render("recaptcha", {
-          sitekey: "6LeC9OkkAAAAAAIVaphcEmTntM70qVDHhRTf9zCS",
-          callback: updateSubmitEnabled
-        });
-      });
+      //showGrepatcha();
+      let captchaInterval = setInterval(() => {
+        const captchaDiv = document.getElementById("recaptcha");
+        if (grecaptchaShown /*captchaDiv && captchaDiv.innerHTML*/) {
+          clearInterval(captchaInterval);
+          console.log("Captcha successfully displayed.");
+        } else {
+          showGrepatcha();
+        }
+      }, 1000); // set the interval time in milliseconds (1000ms = 1s)
     });
 
 
@@ -102,18 +142,26 @@
 
       const form = $(this);
       const url = form.attr('action');
-      const data = {
+      const payload = {
         email: $('input#email').val(),
         password: $('input#password').val()
       };
+
+      console.log('sending login request');
       $.ajax({
         type: "POST",
         url: url,
-        data: data, //form.serialize(), // serializes the form's elements.
-        success: function(data) {
-          //console.log('signup response data: ', data);
-          //alert(data); // show response
-          window.location.href = "/profile";
+        data: payload, //form.serialize(), // serializes the form's elements.
+        success: function(data, statu) {
+          console.log(url, payload, status);
+
+          // console.log('signup response data: ', data);
+          // alert(data); // show response
+
+          window.location.href = "/portal";
+        },
+        error: function() {
+          showAlert('The username and password combination is invalid.');
         }
       }); 
     });
