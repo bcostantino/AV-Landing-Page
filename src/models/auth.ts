@@ -34,6 +34,10 @@ interface PublicUser {
   stripeCustomerId: string;
   emailVerified: boolean;
   license: PublicLicense;
+
+  active: boolean;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 interface License {
@@ -55,6 +59,10 @@ interface PublicLicense {
   id: string;
   userId: string;
   licenseId: string;
+  
+  active: boolean;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export {

@@ -14,6 +14,7 @@ import { createFreeLicense, findLicenseByUserId, getOrCreateCustomer, getStripeC
 import { PublicUser, User } from './models/auth';
 import * as encryption from './crypto';
 import { MySQLConnectionConfig } from './db';
+import { APIRouter } from './APIRouter';
 
 const app = express();
 const MySQLStore = require('express-mysql-session')(session);
@@ -32,26 +33,24 @@ function generateAccessToken(payload, exp = 1800) {
   }, process.env.JWT_TOKEN_SECRET);
 }
 
-function authenticateToken(req: express.Request, res: express.Response, next) {
+function authenticateAccessToken(req: express.Request, res: express.Response, next) {
   //const authHeader = req.headers['authorization'];
   //const token = authHeader && authHeader.split(' ')[1];
   /** use cookie instead of auth header */
-  const token = req.cookies['token'];
+  const token = req.cookies['access_token'];
 
   if (!token) {
-    return res.sendStatus(401);
+    return res.redirect('/signin');
   }
 
-  jwt.verify(token, process.env.JWT_TOKEN_SECRET, (err, payload) => {
+  jwt.verify(token, process.env.JWT_TOKEN_SECRET, async (err: any, payload: any) => {
 
     if (err) {
       console.warn('Caught exception in jwt verificaton... ', err);
-      //return res.sendStatus(403);
-      return res.redirect('/login');
+      return res.redirect('/signin');
     }
 
     res.locals.jwtPayload = payload;
-
     next();
   });
 }
@@ -63,6 +62,13 @@ app.use(session({
   secret: 'randomstuffhere', 
   resave: true, 
   saveUninitialized: true,
+  cookie: {
+    maxAge: 604800000, // 1 week
+    sameSite: 'lax',
+    //secure: true,
+    httpOnly: true,
+  },
+  rolling: true,
   store: new MySQLStore({
     ...MySQLConnectionConfig,
     clearExpired: true,
@@ -111,11 +117,11 @@ app.post('/billing/webhook', express.raw({ type: "*/*" }), async (request, respo
 
 app.use(express.json());
 
-app.get('/billing', authenticateToken, (req, res) => {
+app.get('/billing', authenticateAccessToken, (req, res) => {
   res.render('billing/checkout');
 });
 
-app.post('/billing/create-checkout-session', authenticateToken, async (req, res) => {
+app.post('/billing/create-checkout-session', authenticateAccessToken, async (req, res) => {
   const lookupKey = req.body.lookup_key as string;
   if (!lookupKey)
     return res.sendStatus(400);
@@ -153,7 +159,7 @@ app.post('/billing/create-checkout-session', authenticateToken, async (req, res)
   res.status(303).json({ url: session.url }); //res.redirect(303, session.url);
 });
 
-app.post('/billing/create-portal-session', authenticateToken, async (req, res) => {
+app.post('/billing/create-portal-session', authenticateAccessToken, async (req, res) => {
   // For demonstration purposes, we're using the Checkout session to retrieve the customer ID.
   // Typically this is stored alongside the authenticated user in your database.
   const { session_id, customer_id } = req.body;
@@ -247,7 +253,8 @@ const login = async (req: express.Request, res: express.Response, user: User) =>
     aud: ["all"]
   }, exp);
 
-  res.setHeader('Set-Cookie', [`token=${token}; Max-Age=${exp}; HttpOnly`]);
+  res.setHeader('Set-Cookie', [`access_token=${token}; Max-Age=${exp}; HttpOnly`]);
+  //res.cookie('access_token', token, { maxAge: exp, httpOnly: true });
 }
 
 const logout = async (req: express.Request, res: express.Response) => {
@@ -295,7 +302,7 @@ app.get('/signout', async (req, res) => {
   res.redirect('/');
 });
 
-app.get('/resend-email-verification', authenticateToken, async (req, res) => {
+app.get('/resend-email-verification', authenticateAccessToken, async (req, res) => {
   const user = await findUserById((res.locals.jwtPayload.context.user as User).id);
   //console.log(user);
   if (user.emailVerified)
@@ -345,8 +352,11 @@ const hardAuthorize = async (req: express.Request, res: express.Response, next) 
   next();
 };
 
-app.get('/portal', authenticateToken, hardAuthorize, async (req,res) => {
+app.get('/portal', authenticateAccessToken, hardAuthorize, async (req,res) => {
   res.render('portal');
 });
+
+
+app.use('/api', APIRouter);
 
 app.listen(process.env.PORT, () => console.log('Running on port 4242'));

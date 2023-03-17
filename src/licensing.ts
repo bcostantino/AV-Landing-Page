@@ -29,7 +29,10 @@ const licenseFromDbResult = (result: any) => {
 const toPublicLicense = (license: License): PublicLicense => {
   return <PublicLicense> {
     id: encryption.encrypt(license.id.toString()),
-    licenseId: license.licenseId
+    licenseId: license.licenseId,
+    active: license.active,
+    createdAt: license.createdAt,
+    updatedAt: license.updatedAt
   };
 }
 

@@ -113,6 +113,50 @@
                     <button id="select-plan-submit" class="btn btn-primary"> Continue </button>
                   </div>
                 </div>
+                <script>
+                  document.getElementById('select-plan-submit').addEventListener('click', async () => {
+                    try {
+                      // Get the lookup key from the data attribute of the button
+                      let lookupKey = '';
+                      const radios = document.getElementsByName('btnradio');
+                      for (let i = 0; i < radios.length; i++) {
+                        if (radios[i].checked) {
+                          console.log(`Radio ${i + 1} is selected`);
+                          lookupKey = radios[i].getAttribute('data-lookup-key');
+                          break;
+                        }
+                      }
+                      //console.log(lookupKey);
+                      if (!lookupKey) return;
+                      //const lookupKey = button.getAttribute('data-lookup-key');
+              
+                      // Send a request to create a checkout session with the specified price lookup key
+                      const response = await fetch('/billing/create-checkout-session', {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ lookup_key: lookupKey })
+                      });
+              
+                      // Redirect the user to the checkout session
+                      if (response.status === 303) {
+                        // Parse the JSON response
+                        const session = await response.json();
+                        window.location.href = session.url;
+                      }
+              
+                      if (response.status === 201) {
+                        location.reload();
+                      }
+              
+                        
+                      
+                    } catch (error) {
+                      console.error('Error creating checkout session:', error); 
+                    }
+                  });
+                </script>
               <% } else { %>
                 <p class="card-text">Welcome to AutoViz.</p>
               <% } %>
@@ -120,97 +164,6 @@
 
 
 
-              <script>
-                const radioButtons = document.querySelectorAll('input[type="radio"]');
-                const tooltip = document.createElement('div');
-                tooltip.classList.add('tooltip');
-                document.body.appendChild(tooltip);
-
-                radioButtons.forEach((radioButton) => {
-                  radioButton.addEventListener('mouseover', (event) => {
-                    const tooltipText = event.target.getAttribute('data-tooltip');
-                    if (tooltipText) {
-                      tooltip.textContent = tooltipText;
-                      tooltip.style.display = 'block';
-                      tooltip.style.top = `${event.clientY}px`;
-                      tooltip.style.left = `${event.clientX}px`;
-                    }
-                  });
-                  radioButton.addEventListener('mouseout', () => {
-                    tooltip.style.display = 'none';
-                  });
-                });
-
-                document.getElementById('select-plan-submit').addEventListener('click', async () => {
-                  try {
-                    // Get the lookup key from the data attribute of the button
-                    let lookupKey = '';
-                    const radios = document.getElementsByName('btnradio');
-                    for (let i = 0; i < radios.length; i++) {
-                      if (radios[i].checked) {
-                        console.log(`Radio ${i + 1} is selected`);
-                        lookupKey = radios[i].getAttribute('data-lookup-key');
-                        break;
-                      }
-                    }
-
-                    if (!lookupKey) return;
-                    //const lookupKey = button.getAttribute('data-lookup-key');
-
-                    // Send a request to create a checkout session with the specified price lookup key
-                    const response = await fetch('/billing/create-checkout-session', {
-                      method: 'POST',
-                      headers: {
-                        'Content-Type': 'application/json'
-                      },
-                      body: JSON.stringify({ lookup_key: lookupKey })
-                    });
-
-                    // Redirect the user to the checkout session
-                    if (response.status === 303) {
-                      // Parse the JSON response
-                      const session = await response.json();
-                      window.location.href = session.url;
-                    }
-
-                    if (response.status === 201) {
-                      location.reload();
-                    }
-
-                      
-                    
-                  } catch (error) {
-                    console.error('Error creating checkout session:', error); 
-                  }
-                });
-
-                const billingButton = document.querySelector('#billing-button');
-                billingButton.addEventListener('click', async () => {
-                  try {
-                    const response = await fetch('/billing/create-portal-session', {
-                      method: 'POST',
-                      headers: {
-                        'Content-Type': 'application/json'
-                      },
-                      body: JSON.stringify({
-                        customer_id: '<%= locals.user.stripeCustomerId %>'
-                      })
-                    });
-
-                    if (!response.ok) {
-                      throw new Error('Unable to create portal session.');
-                    }
-
-                    const { url } = await response.json();
-
-                    window.open(url, '_blank'); //window.location.href = url;
-                  } catch (error) {
-                    console.error(error);
-                    alert('An error occurred while trying to manage your billing information.');
-                  }
-                });
-
-              </script>
 
 
               <%#
@@ -292,8 +245,34 @@
   <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://gitcdn.github.io/bootstrap-toggle/2.2.2/js/bootstrap-toggle.min.js"></script>
-  <script>
-    var currentTab = 0; // Current tab is set to be the first tab (0)
+  <script defer>
+    const billingButton = document.getElementById('billing-button');
+    billingButton.addEventListener('click', async () => {
+      try {
+        const response = await fetch('/billing/create-portal-session', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            customer_id: '<%= locals.user.stripeCustomerId %>'
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error('Unable to create portal session.');
+        }
+
+        const { url } = await response.json();
+
+        window.open(url, '_blank'); //window.location.href = url;
+      } catch (error) {
+        console.error(error);
+        alert('An error occurred while trying to manage your billing information.');
+      }
+    });
+
+    /*var currentTab = 0; // Current tab is set to be the first tab (0)
     showTab(currentTab); // Display the current tab
 
     function showTab(n) {
@@ -364,6 +343,6 @@
       }
       //... and adds the "active" class to the current step:
       x[n].className += " active";
-    }
+    }*/
   </script>
 </html>

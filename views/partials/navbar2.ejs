@@ -1,7 +1,7 @@
 <!-- Icon Font Stylesheet -->
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css" rel="stylesheet">
-<nav class="navbar navbar-expand-lg navbar-light px-3 px-lg-3 py-3 py-lg-0 sticky-top shadow-sm" style="min-height: 64px;">
+<nav class="navbar navbar-expand-lg navbar-light px-3 px-lg-3 py-1 sticky-top shadow-sm" style="min-height: 64px;">
     <a href="/" class="navbar-brand p-0">
         <h3 class="m-0 text-dark"><i class="fa fa-network-wired me-2"></i><span style="font-weight: 300;">AUTO</span><span style="font-weight: 500;">VIZ</span></h3>
     </a>
@@ -21,7 +21,7 @@
                 <a href="/#contact" class="nav-item nav-link">Contact</a>
             <% } else if (locals.active_page === 'portal') { %>
                 <% if (locals.user.stripeCustomerId) { %>
-                    <a href="#" id="billing-button" class="nav-item nav-link">Billing <i class="bi bi-arrow-up-right-square ms-1"></i></a>
+                    <a href="#" onclick="openBilling()" id="billing-button" class="nav-item nav-link">Billing <i class="bi bi-arrow-up-right-square ms-1"></i></a>
                 <% } %>
                 <a href="/signout" class="nav-item nav-link">Logout</a>
             <% } %>

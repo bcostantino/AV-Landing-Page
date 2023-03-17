@@ -194,9 +194,9 @@ h6,
         color: var(--primary);
     }
 
-    .navbar-light .navbar-brand img {
+    /*.navbar-light .navbar-brand img {
         max-height: 45px;
-    }
+    }*/
 }
 
 @media (min-width: 992px) {

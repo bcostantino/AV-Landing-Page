@@ -142,6 +142,11 @@ const toPublicUser = async (user: User): Promise<PublicUser> => {
   };
 }
 
+const findAllUsers = async () => {
+  const results = await dbQuery('SELECT * FROM users');
+  return results.map(e => userFromDbResult(e));
+}
+
 const findUserById = async (id) => {
   const results = await dbQuery('SELECT * FROM users WHERE id = ?', [id]);
   return (results.length) ? userFromDbResult(results[0]) : null;
@@ -342,9 +347,12 @@ export {
   dbTest,
   createUser,
   updateUserById,
+
+  findAllUsers,
   findUserById,
   findUserByEmail,
   findUserByCustomerId,
+
   validateEmail,
   validateLogin,
   setUserEmailVerifiedById,
