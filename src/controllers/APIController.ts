@@ -4,9 +4,9 @@ import * as encryption from '../crypto';
 
 const getUsers_REST = async (req: express.Request, res: express.Response) => {
   const users = await findAllUsers();
-  console.log('users: ', users);
+  //console.log('users: ', users);
   const publicUsers = await Promise.all(users.map(e => toPublicUser(e)));
-  console.log('public users: ', publicUsers);
+  //console.log('public users: ', publicUsers);
   res.json({
     users: publicUsers
   });

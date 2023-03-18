@@ -1,7 +1,7 @@
 <!-- Icon Font Stylesheet -->
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0/css/all.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css" rel="stylesheet">
-<nav class="navbar navbar-expand-lg navbar-light px-3 px-lg-3 py-1 sticky-top shadow-sm" style="min-height: 64px;">
+<nav class="navbar navbar-expand-lg navbar-light px-3 px-lg-5 py-1 sticky-top shadow-sm" style="min-height: 64px;">
     <a href="/" class="navbar-brand p-0">
         <h3 class="m-0 text-dark"><i class="fa fa-network-wired me-2"></i><span style="font-weight: 300;">AUTO</span><span style="font-weight: 500;">VIZ</span></h3>
     </a>
@@ -10,31 +10,46 @@
     </button>
     <div class="collapse navbar-collapse" id="navbarCollapse1">
         <%# NAV LINKS %>
-        <div class="navbar-nav ms-auto py-0">
+        <div class="navbar-nav me-auto py-0">
             <% if (locals.active_page === 'home') { %>
-                <a href="/#home" class="nav-item nav-link active">Home</a>
-                <a href="/#about" class="nav-item nav-link">About</a>
+                <!--<a href="/#home" class="nav-item nav-link active">Home</a>-->
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown" href="/" role="button" aria-haspopup="true" aria-expanded="false">Home</a>
+                    <div class="dropdown-menu">
+                      <a class="dropdown-item" href="/#about">About</a>
+                      <a class="dropdown-item" href="/#overview">Overview</a>
+                      <a class="dropdown-item" href="/#features">Features</a>
+                      <a class="dropdown-item" href="/#pricing">Pricing</a>
+                      <a class="dropdown-item" href="/#contact">Contact</a>
+                    </div>
+                  </li>
+                <!--<a href="/#about" class="nav-item nav-link">About</a>
                 <a href="/#overview" class="nav-item nav-link">Overview</a>
                 <a href="/#features" class="nav-item nav-link">Features</a>
                 <a href="/#pricing" class="nav-item nav-link">Pricing</a>
-                <!--<a href="#testimonial" class="nav-item nav-link">Testimonial</a>-->
-                <a href="/#contact" class="nav-item nav-link">Contact</a>
+                <a href="#testimonial" class="nav-item nav-link">Testimonial</a>
+                <a href="/#contact" class="nav-item nav-link">Contact</a>-->
             <% } else if (locals.active_page === 'portal') { %>
                 <% if (locals.user.stripeCustomerId) { %>
-                    <a href="#" onclick="openBilling()" id="billing-button" class="nav-item nav-link">Billing <i class="bi bi-arrow-up-right-square ms-1"></i></a>
+                    <a onclick="openBilling()" id="billing-button" class="nav-item nav-link" style="cursor: pointer;">Billing <i class="bi bi-arrow-up-right-square ms-1"></i></a>
                 <% } %>
-                <a href="/signout" class="nav-item nav-link">Logout</a>
             <% } %>
         </div>
 
         <%# BUTTONS %>
         <% if (locals.active_page === 'home') { %>
             <!--<a href="" class="btn btn-light rounded-pill py-1 px-3 ms-3 d-none d-lg-block">Free Trial</a>-->
-            <a href="" class="nav-item btn btn-sm btn-primary rounded-pill me-2">Get Started for Free</a>
+            <% if (locals.logged_in) { %>
+                <a href="/portal" class="nav-item btn btn-sm btn-light rounded-pill me-2">Open Portal</a>
+            <% } else { %>
+                <a href="" class="nav-item btn btn-sm btn-primary rounded-pill me-2">Get Started for Free</a>
+                <a href="/signin" class="nav-item btn btn-sm btn-light rounded-pill me-2">Login</a>
+            <% } %>
         <% } else if (locals.active_page === 'portal') { %>
             <% if (locals.user.license) { %>
-                <a href="" class="nav-item btn btn-sm btn-primary rounded-pill me-2">Open App</a>
+                <a href="" class="nav-item btn btn-sm btn-primary rounded me-2">Open App</a>
             <% } %>
+            <a href="/signout" class="nav-item btn btn-sm btn-light rounded me-2">Logout</a>
         <% } %>
     </div>
 </nav>

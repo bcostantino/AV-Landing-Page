@@ -201,6 +201,9 @@ app.get('/billing/cancel', (req,res) => {
 /** public routes */
 
 app.get('/', (req,res) => {
+  if (req.session['loggedIn'] && req.cookies['access_token'])
+    res.locals.logged_in = true;
+  
   res.render('index');
 });
 
